@@ -315,7 +315,7 @@ String? _redirect(Ref ref, GoRouterState state) {
     return AppRoutes.homeFor(role);
   }
   if (loc.startsWith('/home/admin') && role != 'admin') {
-    return AppRoutes.homeFor(role);
+    return AppRoutes.errorUnknown;
   }
   if (loc.startsWith('/checkout/') && role != 'customer') {
     return AppRoutes.homeFor(role);

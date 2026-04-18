@@ -44,6 +44,9 @@ abstract class AppRoutes {
 
   static const adminInvites = '/home/admin/invites';
   static const adminUsers = '/home/admin/users';
+  static const adminContent = '/home/admin/content';
+  static const adminAnalytics = '/home/admin/analytics';
+  static const adminOps = '/home/admin/ops';
   static const adminSettings = '/home/admin/settings';
   static const adminLogs = '/home/admin/logs';
 
@@ -57,7 +60,7 @@ abstract class AppRoutes {
       case 'driver':
         return driverAvailable;
       case 'admin':
-        return adminInvites;
+        return adminUsers;
       default:
         return login;
     }

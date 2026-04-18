@@ -90,6 +90,9 @@ async def get_current_user(
     # (disabled_at IS NOT NULL).  Both map to the same opaque 401.
     if not user.is_active or user.disabled_at is not None:
         raise AuthenticationError("Authentication required.", code="AUTH_TOKEN_INVALID")
+    # Phase 11: suspended accounts are rejected on the next request.
+    if getattr(user, "status", "active") == "suspended":
+        raise AuthenticationError("Account suspended.", code="AUTH_ACCOUNT_SUSPENDED")
 
     return user
 

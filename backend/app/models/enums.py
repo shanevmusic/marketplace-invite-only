@@ -59,3 +59,19 @@ invite_link_type_enum = sa.Enum(
     name="invite_link_type",
     create_type=True,
 )
+
+# Phase 11 — admin moderation status (migration 0005 creates the PG types).
+user_status_enum = sa.Enum(
+    "active",
+    "suspended",
+    name="user_status",
+    create_type=False,
+)
+
+product_status_enum = sa.Enum(
+    "active",
+    "disabled",
+    "out_of_stock",
+    name="product_status",
+    create_type=False,
+)

@@ -258,9 +258,54 @@ async def _seed(session: AsyncSession) -> None:
     print()
 
 
+async def _seed_moderation_samples(session: AsyncSession) -> None:
+    """Optional: seed one suspended user + one disabled product for admin demo."""
+    from datetime import datetime, timezone
+
+    from app.models.product import Product
+    from app.models.user import User
+
+    # Suspend driver@example.com
+    driver = (
+        await session.execute(
+            select(User).where(User.email == "driver@example.com")
+        )
+    ).scalar_one_or_none()
+    if driver is not None and driver.status != "suspended":
+        driver.status = "suspended"
+        driver.suspended_at = datetime.now(timezone.utc)
+        driver.suspended_reason = "Demo: TOS violation (seed moderation sample)"
+
+    # Disable the first product.
+    product = (
+        await session.execute(select(Product).order_by(Product.created_at).limit(1))
+    ).scalar_one_or_none()
+    if product is not None and product.status != "disabled":
+        product.status = "disabled"
+        product.disabled_at = datetime.now(timezone.utc)
+        product.disabled_reason = "Demo: flagged (seed moderation sample)"
+
+    await session.commit()
+    log.info("Seeded moderation samples (suspended driver + disabled product).")
+
+
 async def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--with-moderation-samples",
+        action="store_true",
+        help="After base seed, suspend driver + disable one product for admin demo.",
+    )
+    args = parser.parse_args()
+
     async with AsyncSessionFactory() as session:
         await _seed(session)
+
+    if args.with_moderation_samples:
+        async with AsyncSessionFactory() as session:
+            await _seed_moderation_samples(session)
 
 
 if __name__ == "__main__":

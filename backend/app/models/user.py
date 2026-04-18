@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import CITEXT, UUID
 
 from app.db.base import Base
 from app.db.mixins import UUIDPKMixin, TimestampMixin, SoftDeleteMixin
-from app.models.enums import user_role_enum
+from app.models.enums import user_role_enum, user_status_enum
 
 
 class User(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
@@ -65,6 +65,22 @@ class User(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
         sa.TIMESTAMP(timezone=True),
         nullable=True,
     )
+    # Phase 11: admin moderation.  ``status`` is the canonical moderation
+    # state; ``is_active``/``disabled_at`` pre-date this and remain for
+    # backwards compatibility.
+    status: Mapped[str] = mapped_column(
+        user_status_enum,
+        nullable=False,
+        server_default=sa.text("'active'"),
+    )
+    suspended_at: Mapped[Optional[sa.DateTime]] = mapped_column(
+        sa.TIMESTAMP(timezone=True),
+        nullable=True,
+    )
+    suspended_reason: Mapped[Optional[str]] = mapped_column(
+        sa.Text,
+        nullable=True,
+    )
     # Plain UUID — no FK — to avoid users ↔ sellers cycle.
     # Logically references sellers.id; enforced at service layer.
     referring_seller_id: Mapped[Optional[uuid.UUID]] = mapped_column(
@@ -106,6 +122,7 @@ class User(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
     __table_args__ = (
         sa.Index("ix_users_deleted_at", "deleted_at"),
         sa.Index("ix_users_role", "role"),
+        sa.Index("ix_users_status", "status"),
     )
 
     def __repr__(self) -> str:

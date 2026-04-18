@@ -11,6 +11,7 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from app.db.base import Base
 from app.db.mixins import UUIDPKMixin, TimestampMixin, SoftDeleteMixin
+from app.models.enums import product_status_enum
 
 
 class Product(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
@@ -74,6 +75,20 @@ class Product(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
         default=True,
         server_default=sa.text("true"),
     )
+    # Phase 11: admin moderation.
+    status: Mapped[str] = mapped_column(
+        product_status_enum,
+        nullable=False,
+        server_default=sa.text("'active'"),
+    )
+    disabled_at: Mapped[Optional[sa.DateTime]] = mapped_column(
+        sa.TIMESTAMP(timezone=True),
+        nullable=True,
+    )
+    disabled_reason: Mapped[Optional[str]] = mapped_column(
+        sa.Text,
+        nullable=True,
+    )
 
     # ------------------------------------------------------------------
     # CHECK constraints
@@ -86,6 +101,7 @@ class Product(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
         ),
         sa.Index("ix_products_seller_id_is_active", "seller_id", "is_active"),
         sa.Index("ix_products_store_id_is_active", "store_id", "is_active"),
+        sa.Index("ix_products_status", "status"),
     )
 
     # ------------------------------------------------------------------

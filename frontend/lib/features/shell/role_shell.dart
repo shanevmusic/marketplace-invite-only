@@ -23,6 +23,10 @@ import '../cart/screens/cart_screen.dart';
 import '../discover/screens/discover_screen.dart';
 import '../orders/screens/customer_orders_screen.dart';
 import '../orders/screens/seller_orders_screen.dart';
+import '../admin/screens/admin_analytics_screen.dart';
+import '../admin/screens/admin_content_screen.dart';
+import '../admin/screens/admin_ops_screen.dart';
+import '../admin/screens/admin_users_screen.dart';
 import '../products/screens/seller_products_screen.dart';
 import '../sellers/screens/seller_dashboard_screen.dart';
 
@@ -266,54 +270,39 @@ class AdminShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return _ShellScaffold(
-      title: 'Invites',
+      title: 'Users',
       tabs: const [
-        _TabSpec(
-          icon: Icons.mail_outline,
-          activeIcon: Icons.mail,
-          label: 'Invites',
-          path: AppRoutes.adminInvites,
-          title: 'Invites',
-          body: AppEmptyState(
-            icon: Icons.mail_outline,
-            headline: 'Issue your first invite',
-            subhead: 'Seed the network by inviting a seller or another admin.',
-          ),
-        ),
         _TabSpec(
           icon: Icons.people_outline,
           activeIcon: Icons.people,
           label: 'Users',
           path: AppRoutes.adminUsers,
           title: 'Users',
-          body: AppEmptyState(
-            icon: Icons.people_outline,
-            headline: 'Just you so far',
-            subhead: 'Invite sellers and drivers to populate the network.',
-          ),
+          body: AdminUsersScreen(),
+        ),
+        _TabSpec(
+          icon: Icons.inventory_2_outlined,
+          activeIcon: Icons.inventory_2,
+          label: 'Content',
+          path: AppRoutes.adminContent,
+          title: 'Content',
+          body: AdminContentScreen(),
+        ),
+        _TabSpec(
+          icon: Icons.insights_outlined,
+          activeIcon: Icons.insights,
+          label: 'Analytics',
+          path: AppRoutes.adminAnalytics,
+          title: 'Analytics',
+          body: AdminAnalyticsScreen(),
         ),
         _TabSpec(
           icon: Icons.settings_outlined,
           activeIcon: Icons.settings,
-          label: 'Settings',
-          path: AppRoutes.adminSettings,
-          title: 'Platform settings',
-          body: AppEmptyState(
-            icon: Icons.settings_outlined,
-            headline: 'Platform settings',
-            subhead: 'Retention, grace hours, and other defaults.',
-          ),
-        ),
-        _TabSpec(
-          icon: Icons.event_note_outlined,
-          activeIcon: Icons.event_note,
-          label: 'Logs',
-          path: AppRoutes.adminLogs,
-          title: 'Activity',
-          body: AppEmptyState(
-            icon: Icons.event_note_outlined,
-            headline: 'No activity yet',
-          ),
+          label: 'Ops',
+          path: AppRoutes.adminOps,
+          title: 'Ops',
+          body: AdminOpsScreen(),
         ),
       ],
     );

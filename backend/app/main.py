@@ -27,6 +27,7 @@ from slowapi import _rate_limit_exceeded_handler  # type: ignore[attr-defined]
 from slowapi.errors import RateLimitExceeded
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from app.api.v1.admin import router as admin_router
 from app.api.v1.admin_messages import router as admin_messages_router
 from app.api.v1.admin_orders import router as admin_orders_router
 from app.api.v1.auth import router as auth_router
@@ -234,6 +235,7 @@ def create_app() -> FastAPI:
     application.include_router(keys_router, prefix="/api/v1")
     application.include_router(conversations_router, prefix="/api/v1")
     application.include_router(admin_messages_router, prefix="/api/v1")
+    application.include_router(admin_router, prefix="/api/v1")
 
     # -----------------------------------------------------------------------
     # WebSocket endpoint
