@@ -1,5 +1,27 @@
 # Runbook — Deployment
 
+## Secret gate (before anything else)
+
+`deploy-main.yml` is gated on the `AWS_OIDC_ROLE_ARN` repo secret.
+Until that secret (and the rest below) are configured, the deploy job
+runs as a green **no-op** — every push to `main` still reports deploy
+success but does not actually build or ship anything.
+
+Required GitHub Actions secrets (all must be set for deploy to actually
+execute):
+
+- `AWS_OIDC_ROLE_ARN` — gate secret; the IAM role CI assumes via OIDC.
+- `AWS_REGION`
+- `ECR_REPOSITORY`
+- `ECS_CLUSTER`
+- `ECS_SERVICE`
+- `ECS_PRIVATE_SUBNETS` — comma-separated subnet IDs for the migrate task.
+- `ECS_SERVICE_SG` — security group for the migrate task.
+
+OIDC role provisioning (IAM trust + permissions) is covered in the
+infra Terraform under `infra/terraform/aws/` — the role's trust policy
+must include this repo under `sts:AssumeRoleWithWebIdentity`.
+
 ## Normal deploy (from main)
 
 1. PR merges to `main`.

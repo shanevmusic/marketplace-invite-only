@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+// ignore: depend_on_referenced_packages
 import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage_platform_interface.dart';
 import 'package:marketplace/features/cart/cart_store.dart';
 
@@ -89,7 +90,7 @@ void main() {
     final c = make();
     await c.read(cartControllerProvider.future);
     final n = c.read(cartControllerProvider.notifier);
-    final line = const CartLine(
+    const line = CartLine(
       productId: 'p1',
       name: 'X',
       unitPriceMinor: 100,

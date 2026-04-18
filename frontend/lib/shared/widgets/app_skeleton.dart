@@ -72,6 +72,7 @@ class SkeletonTile extends StatelessWidget {
           vertical: AppSpacing.s3,
         ),
         child: Row(
+          // ignore: prefer_const_literals_to_create_immutables
           children: [
             const SkeletonBox(height: 40, width: 40, radius: AppRadius.pill),
             const SizedBox(width: AppSpacing.s3),

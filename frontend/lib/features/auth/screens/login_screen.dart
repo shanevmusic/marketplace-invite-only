@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/theme_extensions.dart';
@@ -40,7 +39,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   bool get _valid =>
-      _emailRegex.hasMatch(_email.text.trim()) && _password.text.length >= 1;
+      _emailRegex.hasMatch(_email.text.trim()) && _password.text.isNotEmpty;
 
   Future<void> _submit() async {
     if (!_valid) return;

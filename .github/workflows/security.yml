@@ -36,7 +36,11 @@ jobs:
           pip install -e . pip-audit
       - name: Run pip-audit
         working-directory: backend
-        run: pip-audit -s osv --progress-spinner off
+        # Ignore CVE-2024-23342 (ecdsa Minerva timing side-channel): no upstream fix,
+        # transitive via python-jose[cryptography]. Not in our v1 threat model (attacker
+        # cannot control sign-operation timing on chosen data). Tracked in POST-V1-BACKLOG
+        # for v1.1 migration to PyJWT.
+        run: pip-audit -s osv --progress-spinner off --ignore-vuln CVE-2024-23342
 
   flutter-outdated:
     name: flutter pub outdated

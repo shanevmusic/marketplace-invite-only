@@ -112,3 +112,15 @@ it" as a top-5 request.
   while we're on Supabase free tier.
 - WAF rule set in front of ALB — currently rely on rate-limit +
   SecurityHeadersMiddleware.
+
+---
+
+## Known CVE ignores ⚪
+
+These CVEs are suppressed in CI (`.github/workflows/security.yml` →
+`pip-audit --ignore-vuln ...`) because no upstream fix is available and
+the exposure is outside our v1 threat model. Re-audit each quarter.
+
+| Package | Version | CVE | Rationale | Exit plan |
+| --- | --- | --- | --- | --- |
+| `ecdsa` | 0.19.2 | CVE-2024-23342 (Minerva timing side-channel) | No upstream fix. Transitive via `python-jose[cryptography]`. The side-channel is only relevant if an attacker can control the timing of sign operations on attacker-chosen data — we sign JWTs for our own users server-side with fixed secrets, not a threat vector. | v1.1: migrate off `python-jose` to `PyJWT` (which uses `cryptography` directly and does not pull `ecdsa`). Tracked here. |

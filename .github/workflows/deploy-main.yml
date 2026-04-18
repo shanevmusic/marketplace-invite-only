@@ -1,5 +1,11 @@
 name: deploy-main
 
+# This workflow is gated on the `AWS_OIDC_ROLE_ARN` GitHub secret. Until
+# that secret (plus `AWS_REGION`, `ECR_REPOSITORY`, `ECS_CLUSTER`,
+# `ECS_SERVICE`, `ECS_PRIVATE_SUBNETS`, `ECS_SERVICE_SG`) is configured,
+# the deploy job completes as a no-op (green) so pushes to main do not
+# fail CI. See docs/runbooks/DEPLOYMENT.md for the OIDC setup procedure.
+
 on:
   push:
     branches: [main]
@@ -19,8 +25,28 @@ permissions:
   contents: read
 
 jobs:
+  check-secrets:
+    name: check AWS deploy secrets
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - id: check
+        env:
+          HAS_ROLE: ${{ secrets.AWS_OIDC_ROLE_ARN != '' }}
+        run: |
+          if [ "$HAS_ROLE" = "true" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "AWS_OIDC_ROLE_ARN is set — deploy will run."
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "AWS_OIDC_ROLE_ARN is NOT set — deploy is gated and will no-op (see workflow header)."
+          fi
+
   deploy:
     name: build + migrate + deploy (AWS ECS)
+    needs: [check-secrets]
+    if: needs.check-secrets.outputs.ready == 'true'
     runs-on: ubuntu-latest
 
     env:

@@ -108,6 +108,12 @@ def _cleanup(ids: list[uuid.UUID], conv_ids: list[uuid.UUID]) -> None:
 def tc(setup_test_db):
     with TestClient(app) as client:
         yield client
+    # Dispose the async engine's pool so the next TestClient module doesn't
+    # inherit asyncpg connections bound to this module's (now-closed) event
+    # loop. Mirrors the teardown in tests/test_phase7_delivery_tracking.py.
+    import asyncio
+    from app.db.session import async_engine
+    asyncio.run(async_engine.dispose())
 
 
 def test_ws_connect_without_token_closes_4401(tc: TestClient) -> None:

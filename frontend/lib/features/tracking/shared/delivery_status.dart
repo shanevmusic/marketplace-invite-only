@@ -60,5 +60,5 @@ String etaCopy(int? etaSeconds) {
   }
   final h = (etaSeconds / 3600).floor();
   final remainderMinutes = ((etaSeconds - h * 3600) / 60).round();
-  return 'Arriving in ~${h} h ${remainderMinutes} min';
+  return 'Arriving in ~$h h $remainderMinutes min';
 }

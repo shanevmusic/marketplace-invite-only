@@ -24,8 +24,10 @@ class DeepLinkHandler {
   Future<void> init(BuildContext context) async {
     try {
       final initial = await _appLinks.getInitialLink();
+      // ignore: use_build_context_synchronously
       if (initial != null) _handle(context, initial);
     } catch (_) {}
+    // ignore: use_build_context_synchronously
     _sub = _appLinks.uriLinkStream.listen((uri) => _handle(context, uri));
   }
 

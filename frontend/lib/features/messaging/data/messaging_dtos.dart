@@ -1,6 +1,6 @@
-/// DTO mirrors. Strictly ciphertext fields — **no plaintext/text/body/content
-/// field is ever added here** (ADR-0013). The widget tree receives plaintext
-/// only via the decrypted [MessageView] in `domain/`.
+// DTO mirrors. Strictly ciphertext fields — **no plaintext/text/body/content
+// field is ever added here** (ADR-0013). The widget tree receives plaintext
+// only via the decrypted [MessageView] in `domain/`.
 
 class PeerKeyDto {
   const PeerKeyDto({

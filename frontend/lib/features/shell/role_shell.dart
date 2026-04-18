@@ -150,7 +150,7 @@ class _CartBadgeWrap extends StatelessWidget {
         Positioned(
           right: 12,
           top: 12,
-          child: TabBadge(child: const SizedBox.shrink(), count: count),
+          child: TabBadge(count: count, child: const SizedBox.shrink()),
         ),
       ],
     );

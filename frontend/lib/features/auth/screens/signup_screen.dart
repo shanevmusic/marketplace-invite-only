@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/theme_extensions.dart';
@@ -256,7 +255,10 @@ class _RoleChoiceCard extends StatelessWidget {
         children: [
           Radio<bool>(
             value: true,
+            // TODO(POST-V1-BACKLOG): migrate to RadioGroup ancestor (Flutter 3.32+).
+            // ignore: deprecated_member_use
             groupValue: selected,
+            // ignore: deprecated_member_use
             onChanged: (_) => onTap(),
           ),
           const SizedBox(width: AppSpacing.s2),
