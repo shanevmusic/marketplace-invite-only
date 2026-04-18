@@ -18,6 +18,7 @@ import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import (
+    AccountSuspended,
     AuthenticationError,
     EmailTaken,
     InvalidCredentials,
@@ -31,6 +32,7 @@ from app.core.security import (
     generate_refresh_token,
     hash_password,
     hash_refresh_token,
+    needs_rehash,
     verify_password,
 )
 from app.models.refresh_token import RefreshToken
@@ -108,7 +110,14 @@ async def signup(
     row, writes a referral row if applicable, sets referring_seller_id, and
     issues a token pair.
     """
+    from app.core.exceptions import PasswordTooCommon
+    from app.core.password_policy import is_common_password
     from app.services.invite_service import consume_invite
+
+    # Reject passwords in the embedded common-password list before touching
+    # the invite row, so we don't consume a single-use invite on a bad pw.
+    if is_common_password(req.password):
+        raise PasswordTooCommon()
 
     # Validate and consume invite (raises on any invalid state)
     role_choice = req.role_choice
@@ -195,6 +204,18 @@ async def login(
     if not user.is_active:  # type: ignore[union-attr]  # user is not None at this point
         # Return the same opaque error — do NOT reveal the account exists.
         raise InvalidCredentials()
+
+    # Phase 12: reject suspended accounts BEFORE issuing any tokens.  Unlike
+    # the opaque "invalid credentials" path above, suspensions are an
+    # explicit admin decision the user already knows about, so surfacing
+    # 403 AUTH_ACCOUNT_SUSPENDED is the expected UX.
+    if user.status == "suspended":  # type: ignore[union-attr]
+        raise AccountSuspended()
+
+    # Silently rehash if argon2 parameters have been strengthened since the
+    # stored hash was created.
+    if needs_rehash(user.password_hash):  # type: ignore[union-attr]
+        user.password_hash = hash_password(password)  # type: ignore[union-attr]
 
     access_token, exp = create_access_token(user.id, user.role)
     refresh_plaintext, _ = await _create_refresh_token_row(db, user, device_label)

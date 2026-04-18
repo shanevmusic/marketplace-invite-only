@@ -49,6 +49,17 @@ def verify_password(password: str, password_hash: str) -> bool:
         return False
 
 
+def needs_rehash(password_hash: str) -> bool:
+    """Return True if *password_hash* was produced with weaker argon2 params.
+
+    Used to transparently upgrade older hashes on successful login.
+    """
+    try:
+        return _ph.check_needs_rehash(password_hash)
+    except (VerifyMismatchError, VerificationError, InvalidHashError):
+        return False
+
+
 # ---------------------------------------------------------------------------
 # JWT access tokens
 # ---------------------------------------------------------------------------
@@ -80,7 +91,9 @@ def create_access_token(user_id: uuid.UUID, role: str) -> tuple[str, datetime]:
         "exp": exp,
         "iat": now,
     }
-    token = jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+    token = jwt.encode(
+        payload, settings.jwt_signing_key, algorithm=settings.jwt_algorithm
+    )
     return token, exp
 
 
@@ -91,17 +104,27 @@ def decode_access_token(token: str) -> AccessTokenPayload:
         TokenExpired: if the token's ``exp`` claim is in the past.
         InvalidTokenError: if the token is malformed or the signature is invalid.
     """
-    try:
-        payload = jwt.decode(
-            token,
-            settings.jwt_secret,
-            algorithms=[settings.jwt_algorithm],
-        )
-    except JWTError as exc:
-        msg = str(exc).lower()
-        if "expired" in msg or "exp" in msg:
-            raise TokenExpired() from exc
-        raise InvalidTokenError() from exc
+    last_exc: JWTError | None = None
+    payload = None
+    for key in settings.jwt_verification_keys:
+        try:
+            payload = jwt.decode(
+                token,
+                key,
+                algorithms=[settings.jwt_algorithm],
+            )
+            last_exc = None
+            break
+        except JWTError as exc:
+            last_exc = exc
+            msg = str(exc).lower()
+            # If the token is definitively expired, stop trying other keys.
+            if "expired" in msg:
+                raise TokenExpired() from exc
+            continue
+    if payload is None:
+        assert last_exc is not None
+        raise InvalidTokenError() from last_exc
 
     try:
         return AccessTokenPayload(

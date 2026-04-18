@@ -126,8 +126,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               controller: _stock,
               kind: AppTextFieldKind.numeric,
             ),
-            // TODO(phase-13): wire image_picker + S3 upload. For now images
-            // stay empty — the backend accepts an empty list.
+            // Phase 12: presigned upload flow lives in
+            // `product_image_service.dart` (presign → PUT → confirm). The
+            // image_picker UI is phase-13; form currently submits an empty
+            // list which the backend accepts.
             const SizedBox(height: AppSpacing.s5),
             AppButton(
               label: editing ? 'Save changes' : 'Create product',

@@ -27,6 +27,7 @@ from app.models.user_public_key import UserPublicKey  # noqa: F401
 from app.models.review import Review  # noqa: F401
 from app.models.platform_settings import PlatformSettings  # noqa: F401
 from app.models.order_analytics_snapshot import OrderAnalyticsSnapshot  # noqa: F401
+from app.models.user_device import UserDevice  # noqa: F401
 
 __all__ = [
     "User",
@@ -48,4 +49,5 @@ __all__ = [
     "Review",
     "PlatformSettings",
     "OrderAnalyticsSnapshot",
+    "UserDevice",
 ]

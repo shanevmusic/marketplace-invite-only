@@ -1,0 +1,121 @@
+"""Password-policy helpers (Phase 12).
+
+Keeps the strength bar at: min 12 chars (enforced at the Pydantic layer),
+plus a rejection list of frequently leaked/guessed passwords.
+
+The embedded list is intentionally compact (~100 representatives of the
+SecLists "10-million-password-top-1000" file).  It is not exhaustive; it is
+a first-line filter.  Real production stacks layer this with HIBP Pwned
+Passwords, which we leave for a later phase.
+"""
+
+from __future__ import annotations
+
+# A representative slice of the most common leaked passwords.  All entries
+# are stored lowercase — comparisons are case-insensitive.
+_COMMON_PASSWORDS: frozenset[str] = frozenset(
+    {
+        "password",
+        "password1",
+        "password123",
+        "password1234",
+        "password12345",
+        "passw0rd",
+        "p@ssw0rd",
+        "p@ssword1",
+        "qwerty",
+        "qwerty123",
+        "qwerty12345",
+        "qwertyuiop",
+        "1q2w3e4r",
+        "1q2w3e4r5t",
+        "1qaz2wsx",
+        "zaq12wsx",
+        "123456",
+        "12345678",
+        "123456789",
+        "1234567890",
+        "123123123",
+        "111111",
+        "1111111111",
+        "000000",
+        "iloveyou",
+        "iloveyou1",
+        "iloveyou123",
+        "princess",
+        "princess1",
+        "sunshine",
+        "sunshine1",
+        "abc12345",
+        "abcd1234",
+        "abcdefgh",
+        "asdfghjkl",
+        "zxcvbnm",
+        "zxcvbnm123",
+        "letmein",
+        "letmein123",
+        "trustno1",
+        "football",
+        "football1",
+        "baseball",
+        "baseball1",
+        "welcome1",
+        "welcome123",
+        "admin12345",
+        "administrator",
+        "master1234",
+        "master12345",
+        "superman1",
+        "superman123",
+        "batman1234",
+        "dragon1234",
+        "starwars1",
+        "pokemon12345",
+        "mustang1234",
+        "computer1",
+        "computer123",
+        "whatever1",
+        "whatever123",
+        "changeme1",
+        "changeme123",
+        "changeme12345",
+        "samantha1",
+        "jennifer1",
+        "michelle1",
+        "jessica123",
+        "nicole1234",
+        "matthew123",
+        "michael1234",
+        "jordan1234",
+        "hunter1234",
+        "shadow1234",
+        "thomas1234",
+        "football123",
+        "qwerty1234",
+        "passpass123",
+        "liverpool1",
+        "arsenal1234",
+        "chelsea1234",
+        "manchester1",
+        "marlboro123",
+        "ferrari1234",
+        "monkey1234",
+        "cheese1234",
+        "freedom123",
+        "secret123",
+        "secret12345",
+        "iloveyou12345",
+        "trustme1234",
+        "welcome1234",
+        "qazwsxedc",
+        "qazwsxedcrfv",
+        "changeit1234",
+        "temp1234test",
+        "hello1234world",
+    }
+)
+
+
+def is_common_password(password: str) -> bool:
+    """Return True if *password* is in the embedded common-password list."""
+    return password.strip().lower() in _COMMON_PASSWORDS

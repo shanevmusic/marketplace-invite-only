@@ -66,7 +66,22 @@ class Settings(BaseSettings):
         default=_INSECURE_JWT_DEFAULT,
         description=(
             "Secret key for signing JWT access tokens.  Must be replaced with "
-            "a strong random value in staging/production."
+            "a strong random value in staging/production.  Deprecated alias "
+            "for APP_JWT_SECRET_PRIMARY; kept for backwards compatibility."
+        ),
+    )
+    jwt_secret_primary: str = Field(
+        default="",
+        description=(
+            "Primary JWT signing secret.  When set, overrides APP_JWT_SECRET. "
+            "New tokens are signed with this key."
+        ),
+    )
+    jwt_secret_secondary: str = Field(
+        default="",
+        description=(
+            "Fallback JWT verification secret used during rotation.  Tokens "
+            "minted with the previous primary remain valid until they expire."
         ),
     )
     jwt_algorithm: str = Field(
@@ -81,6 +96,86 @@ class Settings(BaseSettings):
         default=7,
         description="Refresh-token TTL in days.",
     )
+
+    # ------------------------------------------------------------------
+    # CORS
+    # ------------------------------------------------------------------
+    cors_origins: str = Field(
+        default="",
+        description=(
+            "Comma-separated list of allowed origins for CORS.  Empty means "
+            "deny-all in prod; dev/test default to '*' via code fallback."
+        ),
+    )
+
+    # ------------------------------------------------------------------
+    # Object storage (S3) — optional, Phase 12 (B-G1)
+    # ------------------------------------------------------------------
+    s3_bucket: str = Field(default="", description="S3 bucket name.")
+    s3_region: str = Field(default="us-east-1", description="S3 region.")
+    aws_access_key_id: str = Field(default="", description="AWS access key.")
+    aws_secret_access_key: str = Field(default="", description="AWS secret.")
+    s3_cdn_base_url: str = Field(
+        default="",
+        description="CDN base URL prefixing final image URLs, no trailing slash.",
+    )
+    s3_upload_max_bytes: int = Field(
+        default=10 * 1024 * 1024,
+        description="Max allowed size for object-storage uploads (bytes).",
+    )
+    s3_presign_expires_seconds: int = Field(
+        default=300,
+        description="Expiry window for presigned upload URLs.",
+    )
+
+    # ------------------------------------------------------------------
+    # Push notifications (FCM / APNs) — optional, Phase 12 (f)
+    # ------------------------------------------------------------------
+    fcm_server_key: str = Field(default="", description="FCM legacy server key.")
+    apns_key_id: str = Field(default="", description="APNs auth key ID.")
+    apns_team_id: str = Field(default="", description="APNs team ID.")
+    apns_bundle_id: str = Field(default="", description="APNs bundle ID.")
+    apns_key_pem: str = Field(default="", description="APNs p8 auth key PEM contents.")
+
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+
+    @property
+    def jwt_signing_key(self) -> str:
+        """Return the secret used to SIGN new tokens."""
+        return self.jwt_secret_primary or self.jwt_secret
+
+    @property
+    def jwt_verification_keys(self) -> list[str]:
+        """Return the ordered list of secrets accepted for verification."""
+        keys: list[str] = []
+        seen: set[str] = set()
+        for candidate in (
+            self.jwt_secret_primary,
+            self.jwt_secret,
+            self.jwt_secret_secondary,
+        ):
+            if candidate and candidate not in seen:
+                keys.append(candidate)
+                seen.add(candidate)
+        if not keys:
+            keys.append(self.jwt_secret)
+        return keys
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """Return parsed CORS origins.
+
+        In dev/test, an empty env falls back to '*' to keep local workflows
+        frictionless.  In prod, empty means deny-all.
+        """
+        raw = [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+        if raw:
+            return raw
+        if self.environment in ("dev", "test"):
+            return ["*"]
+        return []
 
     # ------------------------------------------------------------------
     # Startup secret validation

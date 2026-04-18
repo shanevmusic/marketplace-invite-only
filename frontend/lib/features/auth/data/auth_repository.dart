@@ -42,7 +42,9 @@ class AuthSession {
 class AuthRepository {
   AuthRepository({AuthApi? api, SecureAuthStorage? storage, Dio? dio})
       : _storage = storage ?? SecureAuthStorage(),
-        _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConfig.baseUrl)) {
+        _dio = dio ??
+            (Dio(BaseOptions(baseUrl: ApiConfig.baseUrl))
+              ..options.persistentConnection = true) {
     _api = api ?? AuthApi(dio: _dio);
     _dio.interceptors.add(
       TokenInterceptor(

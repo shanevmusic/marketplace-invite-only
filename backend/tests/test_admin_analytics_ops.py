@@ -86,8 +86,8 @@ async def test_migration_version(
     assert resp.status_code == 200
     body = resp.json()
     assert "version" in body
-    # After migration 0005 is applied, version should be 0005
-    assert body["version"] == "0005"
+    # After migration 0007 is applied, version should be 0007
+    assert body["version"] == "0007"
 
 
 async def test_retention_config(client: AsyncClient, db: AsyncSession) -> None:

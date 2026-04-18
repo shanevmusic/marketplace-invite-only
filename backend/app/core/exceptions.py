@@ -135,6 +135,60 @@ class InvalidTokenError(AuthenticationError):
         super().__init__(message)
 
 
+class AccountSuspended(AuthorizationError):
+    """403 — account is currently suspended by an admin."""
+
+    code = "AUTH_ACCOUNT_SUSPENDED"
+
+    def __init__(self, message: str = "Your account has been suspended.") -> None:
+        super().__init__(message)
+
+
+class UploadNotConfigured(AppException):
+    """503 — S3 / object storage is not configured on the server."""
+
+    http_status = 503
+    code = "UPLOAD_NOT_CONFIGURED"
+
+    def __init__(
+        self,
+        message: str = "Object storage is not configured on this server.",
+    ) -> None:
+        super().__init__(message)
+
+
+class UploadInvalidContentType(ValidationError):
+    """Unsupported content-type for an upload."""
+
+    code = "UPLOAD_INVALID_CONTENT_TYPE"
+
+    def __init__(self, message: str = "Unsupported content type.") -> None:
+        super().__init__(message)
+
+
+class UploadObjectMissing(ValidationError):
+    """Confirm called on an object that does not exist or is oversized."""
+
+    code = "UPLOAD_OBJECT_MISSING"
+
+    def __init__(
+        self, message: str = "Uploaded object is missing or invalid."
+    ) -> None:
+        super().__init__(message)
+
+
+class PasswordTooCommon(ValidationError):
+    """Password matches a known-common entry and was rejected."""
+
+    code = "PASSWORD_TOO_COMMON"
+
+    def __init__(
+        self,
+        message: str = "Password is too common; please choose a stronger password.",
+    ) -> None:
+        super().__init__(message)
+
+
 # ---------------------------------------------------------------------------
 # Invite domain exceptions
 # ---------------------------------------------------------------------------

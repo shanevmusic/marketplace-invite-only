@@ -8,7 +8,9 @@ import 'auth_dtos.dart';
 /// token_interceptor.dart.
 class AuthApi {
   AuthApi({Dio? dio})
-      : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
+      : _dio = dio ??
+            (Dio(BaseOptions(baseUrl: ApiConfig.baseUrl))
+              ..options.persistentConnection = true);
 
   final Dio _dio;
   Dio get dio => _dio;

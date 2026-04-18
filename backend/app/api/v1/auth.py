@@ -34,7 +34,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/signup", response_model=LoginResponse, status_code=201)
-@limiter.limit("5/minute")
+@limiter.limit("3/minute")
 async def signup(
     request: Request,  # required by slowapi
     body: SignupRequest,
@@ -50,7 +50,7 @@ async def signup(
 
 
 @router.post("/login", response_model=LoginResponse, status_code=200)
-@limiter.limit("10/minute")
+@limiter.limit("5/minute")
 async def login(
     request: Request,
     body: LoginRequest,

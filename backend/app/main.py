@@ -40,6 +40,8 @@ from app.api.v1.orders import router as orders_router
 from app.api.v1.products import router as products_router
 from app.api.v1.sellers import router as sellers_router
 from app.api.v1.stores import router as stores_router
+from app.api.v1.uploads import router as uploads_router
+from app.api.v1.devices import router as devices_router
 from app.core.exceptions import AppException
 from app.core.rate_limiter import limiter
 from app.core.scheduler import start_purge_scheduler, stop_purge_scheduler
@@ -82,15 +84,64 @@ def create_app() -> FastAPI:
     application.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     # -----------------------------------------------------------------------
-    # CORS — allow * in dev; restrict in prod via env
+    # CORS — driven by APP_CORS_ORIGINS; '*' fallback only in dev/test.
     # -----------------------------------------------------------------------
+    from app.core.config import settings
+
+    cors_origins = settings.cors_origins_list
+    # allow_credentials is incompatible with '*' (Starlette will raise).  Fall
+    # back to an empty list of allowed origins in that case — safer than
+    # silently dropping the credential flag.
+    allow_credentials = cors_origins != ["*"]
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Phase 12 will lock down to frontend origins
-        allow_credentials=True,
+        allow_origins=cors_origins,
+        allow_credentials=allow_credentials,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # -----------------------------------------------------------------------
+    # Security headers — applied to every response via pure ASGI middleware.
+    # -----------------------------------------------------------------------
+    _SECURITY_HEADERS: list[tuple[bytes, bytes]] = [
+        (b"strict-transport-security", b"max-age=63072000; includeSubDomains"),
+        (b"x-content-type-options", b"nosniff"),
+        (b"referrer-policy", b"strict-origin-when-cross-origin"),
+        (
+            b"permissions-policy",
+            b"camera=(), microphone=(), geolocation=(self)",
+        ),
+        (
+            b"content-security-policy",
+            b"default-src 'none'; frame-ancestors 'none'",
+        ),
+    ]
+
+    class SecurityHeadersMiddleware:
+        """Append baseline security headers to every HTTP response."""
+
+        def __init__(self, a: ASGIApp) -> None:
+            self.app = a
+
+        async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+            if scope["type"] != "http":
+                await self.app(scope, receive, send)
+                return
+
+            async def send_with_headers(message: Any) -> None:
+                if message["type"] == "http.response.start":
+                    headers_list = list(message.get("headers", []))
+                    existing = {name for name, _ in headers_list}
+                    for name, value in _SECURITY_HEADERS:
+                        if name not in existing:
+                            headers_list.append((name, value))
+                    message = {**message, "headers": headers_list}
+                await send(message)
+
+            await self.app(scope, receive, send_with_headers)
+
+    application.add_middleware(SecurityHeadersMiddleware)  # type: ignore[arg-type]
 
     # -----------------------------------------------------------------------
     # Request-ID middleware — pure ASGI (avoids BaseHTTPMiddleware task issues)
@@ -236,6 +287,8 @@ def create_app() -> FastAPI:
     application.include_router(conversations_router, prefix="/api/v1")
     application.include_router(admin_messages_router, prefix="/api/v1")
     application.include_router(admin_router, prefix="/api/v1")
+    application.include_router(uploads_router, prefix="/api/v1")
+    application.include_router(devices_router, prefix="/api/v1")
 
     # -----------------------------------------------------------------------
     # WebSocket endpoint

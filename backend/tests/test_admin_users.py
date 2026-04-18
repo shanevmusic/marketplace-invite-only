@@ -100,13 +100,15 @@ async def test_suspend_and_unsuspend_flow(
     assert body["status"] == "suspended"
     assert body["suspended_reason"] == "TOS violation"
 
-    # Suspended driver cannot authenticate on subsequent requests.
-    drv_token = await _login(client, "drv@x.com", "DriverPass123!")
-    resp = await client.get(
-        "/api/v1/auth/me",
-        headers={"Authorization": f"Bearer {drv_token}"},
+    # Phase 12: suspended users are rejected at the /auth/login boundary
+    # BEFORE any tokens are issued.  403 AUTH_ACCOUNT_SUSPENDED is the
+    # canonical response.
+    resp = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "drv@x.com", "password": "DriverPass123!"},
     )
-    assert resp.status_code == 401
+    assert resp.status_code == 403
+    assert resp.json()["error"]["code"] == "AUTH_ACCOUNT_SUSPENDED"
 
     # Unsuspend
     resp = await client.post(
