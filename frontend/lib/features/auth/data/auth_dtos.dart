@@ -58,18 +58,21 @@ class AuthUser {
     required this.email,
     required this.role,
     required this.displayName,
+    this.referringSellerId,
   });
 
   final String id;
   final String email;
   final String role;
   final String displayName;
+  final String? referringSellerId;
 
   factory AuthUser.fromJson(Map<String, dynamic> json) => AuthUser(
         id: json['id'] as String,
         email: json['email'] as String,
         role: json['role'] as String,
         displayName: json['display_name'] as String,
+        referringSellerId: json['referring_seller_id'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -77,6 +80,7 @@ class AuthUser {
         'email': email,
         'role': role,
         'display_name': displayName,
+        if (referringSellerId != null) 'referring_seller_id': referringSellerId,
       };
 }
 
@@ -156,6 +160,7 @@ class MeResponse {
         email: email,
         role: role,
         displayName: displayName,
+        referringSellerId: referringSellerId,
       );
 }
 

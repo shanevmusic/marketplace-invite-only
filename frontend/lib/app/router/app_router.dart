@@ -11,7 +11,14 @@ import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
 import '../../features/auth/screens/splash_screen.dart';
 import '../../features/auth/state/auth_controller.dart';
+import '../../features/checkout/screens/checkout_screen.dart';
+import '../../features/orders/screens/customer_order_detail_screen.dart';
+import '../../features/orders/screens/seller_order_detail_screen.dart';
+import '../../features/products/screens/product_detail_screen.dart';
+import '../../features/products/screens/product_form_screen.dart';
+import '../../features/products/state/product_controller.dart';
 import '../../features/shell/role_shell.dart';
+import '../../features/stores/screens/create_store_screen.dart';
 import 'routes.dart';
 
 /// Listenable that fires when the AuthController's AsyncValue transitions.
@@ -72,25 +79,31 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.errorUnknown,
         builder: (_, __) => const UnknownErrorScreen(),
       ),
+      // Checkout — top-level to hide the bottom nav.
+      GoRoute(
+        path: '/checkout/:sellerId',
+        builder: (_, s) =>
+            CheckoutScreen(sellerId: s.pathParameters['sellerId']!),
+      ),
       GoRoute(
         path: '/home/customer',
         builder: (_, __) => const CustomerShell(),
-        routes: _roleSubRoutes,
+        routes: _customerSubRoutes,
       ),
       GoRoute(
         path: '/home/seller',
         builder: (_, __) => const SellerShell(),
-        routes: _roleSubRoutes,
+        routes: _sellerSubRoutes,
       ),
       GoRoute(
         path: '/home/driver',
         builder: (_, __) => const DriverShell(),
-        routes: _roleSubRoutes,
+        routes: _basicSubRoutes,
       ),
       GoRoute(
         path: '/home/admin',
         builder: (_, __) => const AdminShell(),
-        routes: _roleSubRoutes,
+        routes: _basicSubRoutes,
       ),
     ],
     errorBuilder: (_, __) => const UnknownErrorScreen(),
@@ -98,12 +111,113 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 });
 
 /// Catch-all child matcher so deep-link tab paths land on the shell.
-final List<RouteBase> _roleSubRoutes = [
+final List<RouteBase> _basicSubRoutes = [
   GoRoute(
     path: ':tab',
     builder: (_, __) => const SizedBox.shrink(),
   ),
 ];
+
+final List<RouteBase> _customerSubRoutes = [
+  GoRoute(
+    path: 'discover',
+    builder: (_, __) => const CustomerShell(),
+    routes: [
+      GoRoute(
+        path: 'product/:id',
+        parentNavigatorKey: null,
+        builder: (_, s) =>
+            ProductDetailScreen(productId: s.pathParameters['id']!),
+      ),
+    ],
+  ),
+  GoRoute(
+    path: 'orders',
+    builder: (_, __) => const CustomerShell(),
+    routes: [
+      GoRoute(
+        path: ':id',
+        builder: (_, s) =>
+            CustomerOrderDetailScreen(orderId: s.pathParameters['id']!),
+      ),
+    ],
+  ),
+  GoRoute(
+    path: 'cart',
+    builder: (_, __) => const CustomerShell(),
+  ),
+  GoRoute(
+    path: 'messages',
+    builder: (_, __) => const CustomerShell(),
+  ),
+  GoRoute(
+    path: 'profile',
+    builder: (_, __) => const CustomerShell(),
+  ),
+];
+
+final List<RouteBase> _sellerSubRoutes = [
+  GoRoute(
+    path: 'dashboard',
+    builder: (_, __) => const SellerShell(),
+    routes: [
+      GoRoute(
+        path: 'store/new',
+        builder: (_, __) => const CreateStoreScreen(),
+      ),
+    ],
+  ),
+  GoRoute(
+    path: 'products',
+    builder: (_, __) => const SellerShell(),
+    routes: [
+      GoRoute(
+        path: 'new',
+        builder: (_, __) => const ProductFormScreen(),
+      ),
+      GoRoute(
+        path: ':id/edit',
+        builder: (ctx, s) => _ProductEditLoader(
+          productId: s.pathParameters['id']!,
+        ),
+      ),
+    ],
+  ),
+  GoRoute(
+    path: 'orders',
+    builder: (_, __) => const SellerShell(),
+    routes: [
+      GoRoute(
+        path: ':id',
+        builder: (_, s) =>
+            SellerOrderDetailScreen(orderId: s.pathParameters['id']!),
+      ),
+    ],
+  ),
+  GoRoute(
+    path: 'profile',
+    builder: (_, __) => const SellerShell(),
+  ),
+];
+
+class _ProductEditLoader extends ConsumerWidget {
+  const _ProductEditLoader({required this.productId});
+  final String productId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(productByIdProvider(productId));
+    return async.when(
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => const Scaffold(
+        body: Center(child: Text('Could not load product')),
+      ),
+      data: (p) => ProductFormScreen(existing: p),
+    );
+  }
+}
 
 String? _redirect(Ref ref, GoRouterState state) {
   final auth = ref.read(authControllerProvider);
@@ -133,7 +247,6 @@ String? _redirect(Ref ref, GoRouterState state) {
     return onPublic ? null : AppRoutes.login;
   }
 
-  // Authed user wandered into an unauth-only route.
   if (loc == AppRoutes.login ||
       loc == AppRoutes.signup ||
       loc == AppRoutes.splash ||
@@ -141,7 +254,6 @@ String? _redirect(Ref ref, GoRouterState state) {
     return AppRoutes.homeFor(session.user.role);
   }
 
-  // Role-guarded shells.
   final role = session.user.role;
   if (loc.startsWith('/home/customer') && role != 'customer') {
     return AppRoutes.homeFor(role);
@@ -153,6 +265,9 @@ String? _redirect(Ref ref, GoRouterState state) {
     return AppRoutes.homeFor(role);
   }
   if (loc.startsWith('/home/admin') && role != 'admin') {
+    return AppRoutes.homeFor(role);
+  }
+  if (loc.startsWith('/checkout/') && role != 'customer') {
     return AppRoutes.homeFor(role);
   }
   return null;

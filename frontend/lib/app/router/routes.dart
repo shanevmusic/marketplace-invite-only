@@ -16,14 +16,27 @@ abstract class AppRoutes {
   static const adminHome = '/home/admin';
 
   static const customerDiscover = '/home/customer/discover';
+  static const customerCart = '/home/customer/cart';
   static const customerOrders = '/home/customer/orders';
   static const customerMessages = '/home/customer/messages';
   static const customerProfile = '/home/customer/profile';
+
+  static String customerProduct(String id) =>
+      '$customerDiscover/product/$id';
+  static String customerSeller(String id) => '$customerDiscover/seller/$id';
+  static String customerOrderDetail(String id) => '$customerOrders/$id';
+
+  /// Checkout is top-level so the bottom nav hides (frontend-spec/phase-9-navigation-additions.md §4).
+  static String checkout(String sellerId) => '/checkout/$sellerId';
 
   static const sellerDashboard = '/home/seller/dashboard';
   static const sellerProducts = '/home/seller/products';
   static const sellerOrders = '/home/seller/orders';
   static const sellerStore = '/home/seller/profile';
+  static const sellerStoreNew = '/home/seller/dashboard/store/new';
+  static String sellerProductNew() => '$sellerProducts/new';
+  static String sellerProductEdit(String id) => '$sellerProducts/$id/edit';
+  static String sellerOrderDetail(String id) => '$sellerOrders/$id';
 
   static const driverAvailable = '/home/driver/available';
   static const driverActive = '/home/driver/active';

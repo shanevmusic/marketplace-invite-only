@@ -1,9 +1,12 @@
-// Role shells for Phase 8. Each shell holds an IndexedStack of tabs where all
-// bodies are AppEmptyState placeholders. Discover for unreferred customers
-// renders the ADR-0007 "You need a seller invite" empty state from day 1.
+// Role shells for Phase 9 — each shell routes the selected tab to a real
+// screen. The shell uses IndexedStack for instant tab switching; navigation
+// to detail screens (product, order, checkout) happens via GoRouter outside
+// the shell (frontend-spec/phase-9-navigation-additions.md §4).
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../app/router/routes.dart';
 import '../../app/theme/theme_extensions.dart';
 import '../../app/theme/tokens.dart';
 import '../../shared/widgets/app_app_bar.dart';
@@ -13,65 +16,63 @@ import '../../shared/widgets/app_dialog.dart';
 import '../../shared/widgets/app_empty_state.dart';
 import '../../shared/widgets/app_list_tile.dart';
 import '../../shared/widgets/app_snackbar.dart';
+import '../../shared/widgets/tab_badge.dart';
 import '../auth/state/auth_controller.dart';
+import '../cart/cart_store.dart';
+import '../cart/screens/cart_screen.dart';
+import '../discover/screens/discover_screen.dart';
+import '../orders/screens/customer_orders_screen.dart';
+import '../orders/screens/seller_orders_screen.dart';
+import '../products/screens/seller_products_screen.dart';
+import '../sellers/screens/seller_dashboard_screen.dart';
 
 class _TabSpec {
   const _TabSpec({
     required this.icon,
     required this.activeIcon,
     required this.label,
+    required this.path,
     required this.body,
     this.title,
   });
   final IconData icon;
   final IconData activeIcon;
   final String label;
+  final String path;
   final Widget body;
   final String? title;
 }
 
-String? _currentIndexForRoute(String location, List<String> tabPaths) {
-  for (final p in tabPaths) {
-    if (location.startsWith(p)) return p;
+int _indexForLocation(String loc, List<_TabSpec> tabs) {
+  for (int i = 0; i < tabs.length; i++) {
+    if (loc.startsWith(tabs[i].path)) return i;
   }
-  return null;
+  return 0;
 }
 
-class _ShellScaffold extends ConsumerStatefulWidget {
-  const _ShellScaffold({
-    required this.title,
-    required this.tabs,
-    this.fab,
-  });
-
+class _ShellScaffold extends ConsumerWidget {
+  const _ShellScaffold({required this.title, required this.tabs});
   final String title;
   final List<_TabSpec> tabs;
-  final Widget? fab;
 
   @override
-  ConsumerState<_ShellScaffold> createState() => _ShellScaffoldState();
-}
-
-class _ShellScaffoldState extends ConsumerState<_ShellScaffold> {
-  int _index = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final tab = widget.tabs[_index];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final loc = GoRouterState.of(context).matchedLocation;
+    final idx = _indexForLocation(loc, tabs);
+    final tab = tabs[idx];
     return Scaffold(
-      appBar: AppTopBar(title: tab.title ?? widget.title),
+      appBar: AppTopBar(title: tab.title ?? title),
       body: SafeArea(
         child: IndexedStack(
-          index: _index,
-          children: [for (final t in widget.tabs) t.body],
+          index: idx,
+          children: [for (final t in tabs) t.body],
         ),
       ),
-      floatingActionButton: widget.fab,
       bottomNavigationBar: AppBottomNav(
-        currentIndex: _index,
-        onTap: (i) => setState(() => _index = i),
+        currentIndex: idx,
+        onTap: (i) => context.go(tabs[i].path),
         items: [
-          for (final t in widget.tabs)
+          for (final t in tabs)
             AppBottomNavItem(
               icon: t.icon,
               activeIcon: t.activeIcon,
@@ -90,52 +91,61 @@ class CustomerShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final cartCount = ref.watch(cartControllerProvider).valueOrNull?.totalItems ?? 0;
     return _ShellScaffold(
       title: 'Discover',
       tabs: [
-        _TabSpec(
+        const _TabSpec(
           icon: Icons.storefront_outlined,
           activeIcon: Icons.storefront,
           label: 'Discover',
+          path: AppRoutes.customerDiscover,
           title: 'Discover',
-          // ADR-0007 referral-scoped empty state. Never shown as "no products".
-          body: const AppEmptyState(
-            icon: Icons.lock_outline,
-            headline: 'You need a seller invite',
-            subhead:
-                'This marketplace is invite-only. Ask a seller for their '
-                'referral link, then open it to unlock their store.',
-            ctaLabel: 'How invites work',
-          ),
+          body: DiscoverScreen(),
         ),
         _TabSpec(
+          icon: Icons.shopping_cart_outlined,
+          activeIcon: Icons.shopping_cart,
+          label: 'Cart',
+          path: AppRoutes.customerCart,
+          title: 'Cart',
+          body: _CartBadgeWrap(count: cartCount, child: const CartScreen()),
+        ),
+        const _TabSpec(
           icon: Icons.receipt_long_outlined,
           activeIcon: Icons.receipt_long,
           label: 'Orders',
+          path: AppRoutes.customerOrders,
           title: 'Orders',
-          body: const AppEmptyState(
-            icon: Icons.receipt_long_outlined,
-            headline: 'No orders yet',
-            subhead: "When you place an order, it'll appear here.",
-          ),
+          body: CustomerOrdersScreen(),
         ),
-        _TabSpec(
-          icon: Icons.chat_bubble_outline,
-          activeIcon: Icons.chat_bubble,
-          label: 'Messages',
-          title: 'Messages',
-          body: const AppEmptyState(
-            icon: Icons.chat_bubble_outline,
-            headline: 'No messages yet',
-            subhead: 'Conversations with your seller appear here.',
-          ),
-        ),
-        _TabSpec(
+        const _TabSpec(
           icon: Icons.person_outline,
           activeIcon: Icons.person,
           label: 'Profile',
+          path: AppRoutes.customerProfile,
           title: 'Profile',
-          body: const ProfileTab(),
+          body: ProfileTab(),
+        ),
+      ],
+    );
+  }
+}
+
+class _CartBadgeWrap extends StatelessWidget {
+  const _CartBadgeWrap({required this.count, required this.child});
+  final int count;
+  final Widget child;
+  @override
+  Widget build(BuildContext context) {
+    if (count <= 0) return child;
+    return Stack(
+      children: [
+        child,
+        Positioned(
+          right: 12,
+          top: 12,
+          child: TabBadge(child: const SizedBox.shrink(), count: count),
         ),
       ],
     );
@@ -151,48 +161,38 @@ class SellerShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return _ShellScaffold(
       title: 'Dashboard',
-      tabs: [
+      tabs: const [
         _TabSpec(
           icon: Icons.dashboard_outlined,
           activeIcon: Icons.dashboard,
           label: 'Dashboard',
+          path: AppRoutes.sellerDashboard,
           title: 'Dashboard',
-          body: AppEmptyState(
-            icon: Icons.storefront_outlined,
-            headline: 'Create your store',
-            subhead: 'Give it a name and city so customers can find you.',
-            ctaLabel: 'Create store',
-            onCtaPressed: () {},
-          ),
+          body: SellerDashboardScreen(),
         ),
         _TabSpec(
           icon: Icons.inventory_2_outlined,
           activeIcon: Icons.inventory_2,
           label: 'Products',
+          path: AppRoutes.sellerProducts,
           title: 'Products',
-          body: const AppEmptyState(
-            icon: Icons.inventory_2_outlined,
-            headline: 'No products yet',
-            subhead: 'Add your first product to start selling.',
-          ),
+          body: SellerProductsScreen(),
         ),
         _TabSpec(
           icon: Icons.receipt_long_outlined,
           activeIcon: Icons.receipt_long,
           label: 'Orders',
+          path: AppRoutes.sellerOrders,
           title: 'Orders',
-          body: const AppEmptyState(
-            icon: Icons.receipt_long_outlined,
-            headline: 'No orders yet',
-            subhead: 'Orders from your customers will appear here.',
-          ),
+          body: SellerOrdersScreen(),
         ),
         _TabSpec(
           icon: Icons.store_outlined,
           activeIcon: Icons.store,
           label: 'Store',
+          path: AppRoutes.sellerStore,
           title: 'Store',
-          body: const ProfileTab(),
+          body: ProfileTab(),
         ),
       ],
     );
@@ -208,25 +208,26 @@ class DriverShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return _ShellScaffold(
       title: 'Available deliveries',
-      tabs: [
+      tabs: const [
         _TabSpec(
           icon: Icons.list_alt_outlined,
           activeIcon: Icons.list_alt,
           label: 'Available',
+          path: AppRoutes.driverAvailable,
           title: 'Available deliveries',
-          body: const AppEmptyState(
+          body: AppEmptyState(
             icon: Icons.list_alt_outlined,
             headline: 'No deliveries assigned',
-            subhead:
-                "When admin assigns you a delivery, it'll appear here.",
+            subhead: "When admin assigns you a delivery, it'll appear here.",
           ),
         ),
         _TabSpec(
           icon: Icons.local_shipping_outlined,
           activeIcon: Icons.local_shipping,
           label: 'Active',
+          path: AppRoutes.driverActive,
           title: 'No active delivery',
-          body: const AppEmptyState(
+          body: AppEmptyState(
             icon: Icons.local_shipping_outlined,
             headline: 'Nothing active right now',
             subhead: 'Accept a delivery from the Available tab to start.',
@@ -236,8 +237,9 @@ class DriverShell extends ConsumerWidget {
           icon: Icons.history,
           activeIcon: Icons.history,
           label: 'History',
+          path: AppRoutes.driverHistory,
           title: 'Completed',
-          body: const AppEmptyState(
+          body: AppEmptyState(
             icon: Icons.history,
             headline: 'No completed deliveries yet',
           ),
@@ -246,8 +248,9 @@ class DriverShell extends ConsumerWidget {
           icon: Icons.person_outline,
           activeIcon: Icons.person,
           label: 'Profile',
+          path: AppRoutes.driverProfile,
           title: 'Profile',
-          body: const ProfileTab(),
+          body: ProfileTab(),
         ),
       ],
     );
@@ -263,37 +266,38 @@ class AdminShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return _ShellScaffold(
       title: 'Invites',
-      tabs: [
+      tabs: const [
         _TabSpec(
           icon: Icons.mail_outline,
           activeIcon: Icons.mail,
           label: 'Invites',
+          path: AppRoutes.adminInvites,
           title: 'Invites',
-          body: const AppEmptyState(
+          body: AppEmptyState(
             icon: Icons.mail_outline,
             headline: 'Issue your first invite',
-            subhead:
-                'Seed the network by inviting a seller or another admin.',
+            subhead: 'Seed the network by inviting a seller or another admin.',
           ),
         ),
         _TabSpec(
           icon: Icons.people_outline,
           activeIcon: Icons.people,
           label: 'Users',
+          path: AppRoutes.adminUsers,
           title: 'Users',
-          body: const AppEmptyState(
+          body: AppEmptyState(
             icon: Icons.people_outline,
             headline: 'Just you so far',
-            subhead:
-                'Invite sellers and drivers to populate the network.',
+            subhead: 'Invite sellers and drivers to populate the network.',
           ),
         ),
         _TabSpec(
           icon: Icons.settings_outlined,
           activeIcon: Icons.settings,
           label: 'Settings',
+          path: AppRoutes.adminSettings,
           title: 'Platform settings',
-          body: const AppEmptyState(
+          body: AppEmptyState(
             icon: Icons.settings_outlined,
             headline: 'Platform settings',
             subhead: 'Retention, grace hours, and other defaults.',
@@ -303,8 +307,9 @@ class AdminShell extends ConsumerWidget {
           icon: Icons.event_note_outlined,
           activeIcon: Icons.event_note,
           label: 'Logs',
+          path: AppRoutes.adminLogs,
           title: 'Activity',
-          body: const AppEmptyState(
+          body: AppEmptyState(
             icon: Icons.event_note_outlined,
             headline: 'No activity yet',
           ),
