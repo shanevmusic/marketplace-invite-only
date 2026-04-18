@@ -72,8 +72,13 @@ def setup_test_db() -> Any:
     """Drop and recreate marketplace_test, then run alembic upgrade head."""
     import psycopg2  # type: ignore[import-untyped]
 
+    # Connect to the default `postgres` admin DB to issue DROP/CREATE. Do NOT
+    # connect to a named app DB here — on CI the service container only creates
+    # `marketplace_test` (the one we're about to drop/recreate), so connecting
+    # to `marketplace` would fail with "database does not exist". The `postgres`
+    # DB is always present on any postgres instance.
     conn = psycopg2.connect(
-        "postgresql://marketplace:marketplace@localhost:5432/marketplace"
+        "postgresql://marketplace:marketplace@localhost:5432/postgres"
     )
     conn.autocommit = True
     cur = conn.cursor()
