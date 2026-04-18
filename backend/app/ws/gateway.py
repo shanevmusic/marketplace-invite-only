@@ -387,6 +387,13 @@ async def handle_ws(ws: WebSocket) -> None:
     await ws.accept()
     conn = WSConnection(ws=ws, user_id=user.id, user_role=user.role)
 
+    # Observability — count active WS connections.
+    try:
+        from app.core.observability import ws_connections_active
+        ws_connections_active.inc()
+    except Exception:  # noqa: BLE001
+        pass
+
     # Heartbeat task
     heartbeat_task = asyncio.create_task(_heartbeat(conn))
     try:
@@ -506,6 +513,11 @@ async def handle_ws(ws: WebSocket) -> None:
         try:
             if ws.application_state != WebSocketState.DISCONNECTED:
                 await ws.close()
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            from app.core.observability import ws_connections_active
+            ws_connections_active.dec()
         except Exception:  # noqa: BLE001
             pass
 

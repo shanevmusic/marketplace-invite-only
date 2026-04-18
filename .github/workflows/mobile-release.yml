@@ -1,0 +1,90 @@
+name: mobile-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      track:
+        description: "Play Store track / TestFlight (internal | alpha | beta)"
+        required: false
+        default: "internal"
+
+jobs:
+  android:
+    name: Android — build + Play Internal upload
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Decode upload keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > $HOME/marketplace-upload.keystore
+          mkdir -p $HOME/.gradle
+          cat > $HOME/.gradle/gradle.properties <<EOF
+          MARKETPLACE_UPLOAD_STORE_FILE=$HOME/marketplace-upload.keystore
+          MARKETPLACE_UPLOAD_STORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          MARKETPLACE_UPLOAD_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}
+          MARKETPLACE_UPLOAD_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
+          EOF
+
+      - name: Build AAB
+        run: |
+          flutter pub get
+          flutter build appbundle --release
+
+      - name: Upload to Play Internal
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_JSON_KEY }}
+          packageName: com.marketplace.app
+          releaseFiles: frontend/build/app/outputs/bundle/release/app-release.aab
+          track: ${{ inputs.track }}
+          status: draft
+
+  ios:
+    name: iOS — build + TestFlight upload
+    # Disabled by default — enable when macOS runner minutes + certs ready.
+    if: false
+    runs-on: macos-14
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install certificates
+        env:
+          IOS_CERT_P12_B64: ${{ secrets.IOS_CERT_P12_B64 }}
+          IOS_CERT_PASSWORD: ${{ secrets.IOS_CERT_PASSWORD }}
+          IOS_PROVISIONING_PROFILE_B64: ${{ secrets.IOS_PROVISIONING_PROFILE_B64 }}
+        run: |
+          echo "$IOS_CERT_P12_B64" | base64 -d > /tmp/cert.p12
+          security create-keychain -p actions build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p actions build.keychain
+          security import /tmp/cert.p12 -k build.keychain -P "$IOS_CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k actions build.keychain
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          echo "$IOS_PROVISIONING_PROFILE_B64" | base64 -d > "$HOME/Library/MobileDevice/Provisioning Profiles/app.mobileprovision"
+
+      - name: Build IPA
+        run: |
+          flutter pub get
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+
+      - name: Upload to TestFlight
+        uses: Apple-Actions/upload-testflight-build@v1
+        with:
+          app-path: frontend/build/ios/ipa/*.ipa
+          issuer-id: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}

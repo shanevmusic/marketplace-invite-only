@@ -57,3 +57,7 @@ backend/.venv/
 backend/**/__pycache__/
 backend/*.egg-info/
 backend/.env
+
+# Phase 13 additions
+infra/terraform/**/.terraform.lock.hcl
+infra/terraform/**/.terraform/

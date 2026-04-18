@@ -32,6 +32,12 @@ dependencies = [
     # Phase 12 — rate limiting + S3 uploads
     "slowapi",
     "boto3",
+    # Phase 13 — observability
+    "sentry-sdk[fastapi]>=2.0",
+    "prometheus-fastapi-instrumentator>=7.0",
+    "prometheus-client",
+    # Production server
+    "gunicorn",
 ]
 
 [project.optional-dependencies]

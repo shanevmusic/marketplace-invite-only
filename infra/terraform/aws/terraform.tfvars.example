@@ -1,0 +1,22 @@
+aws_region            = "us-east-1"
+environment           = "prod"
+app_name              = "marketplace"
+image_tag             = "latest"
+
+# HTTPS listener requires an ACM cert in the same region.
+acm_cert_arn = "arn:aws:acm:us-east-1:123456789012:certificate/REPLACE"
+
+# Optional Route53 alias — leave blank to skip.
+hosted_zone_id = ""
+dns_name       = "api.marketplace.example"
+
+# Optional ops alert topic (SNS) — leave blank to skip alarms.
+ops_alert_sns_arn = ""
+
+service_desired_count = 2
+service_min_count     = 2
+service_max_count     = 10
+task_cpu              = 1024
+task_memory           = 2048
+log_retention_days    = 30
+container_port        = 8000

@@ -1,0 +1,105 @@
+name: deploy-main
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to deploy (defaults to git SHA)"
+        required: false
+        default: ""
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+permissions:
+  id-token: write # OIDC
+  contents: read
+
+jobs:
+  deploy:
+    name: build + migrate + deploy (AWS ECS)
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+      ECS_CLUSTER: ${{ secrets.ECS_CLUSTER }}
+      ECS_SERVICE: ${{ secrets.ECS_SERVICE }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve image tag
+        id: tag
+        run: |
+          TAG="${{ inputs.image_tag }}"
+          if [ -z "$TAG" ]; then TAG="${GITHUB_SHA::12}"; fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Preflight env check
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          python -m app.scripts.check_env || echo "preflight warns logged (prod-only, skipping in CI)"
+
+      - name: Build + push image
+        working-directory: backend
+        env:
+          IMAGE_URI: ${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.tag.outputs.tag }}
+        run: |
+          docker build -t "$IMAGE_URI" -f Dockerfile .
+          docker push "$IMAGE_URI"
+          echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_ENV"
+
+      - name: Fetch current task definition
+        id: taskdef
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition "${ECS_SERVICE}" \
+            --query taskDefinition > taskdef.json
+
+      - name: Render new task definition
+        id: render
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: taskdef.json
+          container-name: backend
+          image: ${{ env.IMAGE_URI }}
+
+      - name: Run alembic migrations as one-off ECS task
+        run: |
+          aws ecs run-task \
+            --cluster "${ECS_CLUSTER}" \
+            --task-definition "${ECS_SERVICE}" \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.ECS_PRIVATE_SUBNETS }}],securityGroups=[${{ secrets.ECS_SERVICE_SG }}],assignPublicIp=DISABLED}" \
+            --overrides '{"containerOverrides":[{"name":"backend","command":["alembic","upgrade","head"]}]}' \
+            > migrate.json
+          TASK_ARN=$(jq -r '.tasks[0].taskArn' migrate.json)
+          echo "Waiting for migration task $TASK_ARN"
+          aws ecs wait tasks-stopped --cluster "${ECS_CLUSTER}" --tasks "$TASK_ARN"
+          EXIT=$(aws ecs describe-tasks --cluster "${ECS_CLUSTER}" --tasks "$TASK_ARN" \
+            --query "tasks[0].containers[0].exitCode" --output text)
+          if [ "$EXIT" != "0" ]; then echo "Migration failed with exit=$EXIT"; exit 1; fi
+
+      - name: Deploy new task definition to service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true

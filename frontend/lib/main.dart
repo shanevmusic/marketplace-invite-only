@@ -7,8 +7,31 @@ import 'app/theme/app_theme.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/state/auth_controller.dart';
 
+// Phase 13 — Sentry init scaffold.
+//
+// Enable by: (1) uncommenting `sentry_flutter` in pubspec.yaml and running
+// `flutter pub get`, (2) passing --dart-define=SENTRY_DSN=<dsn> at build
+// time, (3) wrapping _bootstrap with SentryFlutter.init (see comment below).
+// Intentionally left as a compile-time no-op so analyze + test pass
+// without the dependency resolved.
+const String kSentryDsn =
+    String.fromEnvironment('SENTRY_DSN', defaultValue: '');
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // When sentry_flutter is wired:
+  //   SentryFlutter.init(
+  //     (options) => options
+  //       ..dsn = kSentryDsn
+  //       ..tracesSampleRate = 0.1
+  //       ..environment = const String.fromEnvironment('APP_ENV',
+  //           defaultValue: 'dev'),
+  //     appRunner: _bootstrap,
+  //   );
+  _bootstrap();
+}
+
+void _bootstrap() {
   runApp(
     ProviderScope(
       overrides: [

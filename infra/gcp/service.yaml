@@ -1,0 +1,96 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: marketplace-backend
+  namespace: default
+  labels:
+    cloud.googleapis.com/location: us-central1
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/launch-stage: GA
+spec:
+  template:
+    metadata:
+      annotations:
+        # Scale 2..10 — match ECS footprint.
+        autoscaling.knative.dev/minScale: "2"
+        autoscaling.knative.dev/maxScale: "10"
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/execution-environment: gen2
+    spec:
+      serviceAccountName: marketplace-backend@PROJECT_ID.iam.gserviceaccount.com
+      containerConcurrency: 80
+      timeoutSeconds: 60
+      containers:
+        - image: REGION-docker.pkg.dev/PROJECT_ID/marketplace/backend:TAG
+          ports:
+            - name: http1
+              containerPort: 8000
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2Gi
+          env:
+            - name: APP_ENVIRONMENT
+              value: "prod"
+            - name: APP_S3_BUCKET
+              value: "marketplace-uploads-prod"
+            - name: APP_S3_REGION
+              value: "us-east-1"
+            # Secrets — sourced from Secret Manager.  Populate values via
+            # `gcloud secrets versions add` out-of-band; see secrets.md.
+            - name: APP_JWT_SECRET_PRIMARY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt_secret_primary
+                  key: latest
+            - name: APP_JWT_SECRET_SECONDARY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt_secret_secondary
+                  key: latest
+            - name: APP_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: database_url
+                  key: latest
+            - name: APP_DATABASE_URL_SYNC
+              valueFrom:
+                secretKeyRef:
+                  name: database_url_sync
+                  key: latest
+            - name: APP_FCM_SERVER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: fcm_server_key
+                  key: latest
+            - name: APP_APNS_KEY_PEM
+              valueFrom:
+                secretKeyRef:
+                  name: apns_key_pem
+                  key: latest
+            - name: APP_SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: sentry_dsn
+                  key: latest
+            - name: APP_METRICS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: metrics_token
+                  key: latest
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            periodSeconds: 30
+  traffic:
+    - percent: 100
+      latestRevision: true

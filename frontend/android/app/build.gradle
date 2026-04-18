@@ -1,0 +1,55 @@
+// ---------------------------------------------------------------------------
+// Flutter Android app-level build config.
+//
+// Release signing reads credentials from ~/.gradle/gradle.properties with
+// MARKETPLACE_UPLOAD_STORE_FILE / STORE_PASSWORD / KEY_ALIAS / KEY_PASSWORD.
+// If the keystore is missing (typical in local dev or CI without secrets)
+// the release build falls back to the debug signing config so `flutter
+// build apk --debug` / `flutter run` still work unattended.
+//
+// See frontend/android/SIGNING.md for the full keystore workflow.
+// ---------------------------------------------------------------------------
+
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+def keystoreFile = System.getenv("MARKETPLACE_UPLOAD_STORE_FILE") ?: project.findProperty("MARKETPLACE_UPLOAD_STORE_FILE")
+def hasReleaseKeystore = keystoreFile != null && file(keystoreFile).exists()
+
+android {
+    namespace = "com.marketplace.app"
+    compileSdk = flutter.compileSdkVersion
+
+    defaultConfig {
+        applicationId = "com.marketplace.app"
+        minSdk = flutter.minSdkVersion
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+    }
+
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            release {
+                storeFile file(keystoreFile)
+                storePassword project.findProperty("MARKETPLACE_UPLOAD_STORE_PASSWORD") ?: ""
+                keyAlias project.findProperty("MARKETPLACE_UPLOAD_KEY_ALIAS") ?: ""
+                keyPassword project.findProperty("MARKETPLACE_UPLOAD_KEY_PASSWORD") ?: ""
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig = hasReleaseKeystore ? signingConfigs.release : signingConfigs.debug
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+        }
+    }
+}
+
+flutter { source = "../.." }

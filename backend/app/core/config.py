@@ -138,6 +138,25 @@ class Settings(BaseSettings):
     apns_key_pem: str = Field(default="", description="APNs p8 auth key PEM contents.")
 
     # ------------------------------------------------------------------
+    # Observability — Sentry + Prometheus (Phase 13)
+    # ------------------------------------------------------------------
+    sentry_dsn: str = Field(
+        default="",
+        description="Sentry DSN.  Empty disables Sentry initialisation.",
+    )
+    sentry_release: str = Field(
+        default="",
+        description="Release identifier sent to Sentry (git SHA or version).",
+    )
+    metrics_token: str = Field(
+        default="",
+        description=(
+            "Shared secret required in X-Metrics-Token header to access "
+            "/metrics.  Empty disables the endpoint entirely (returns 404)."
+        ),
+    )
+
+    # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
 

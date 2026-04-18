@@ -65,6 +65,19 @@ logger = logging.getLogger("marketplace")
 
 def create_app() -> FastAPI:
     """Build and return the FastAPI application instance."""
+    # Sentry must be initialised before FastAPI() so it can patch ASGI.
+    try:
+        from app.core.config import settings as _s
+        from app.core.observability import init_sentry
+
+        init_sentry(
+            dsn=_s.sentry_dsn,
+            environment=_s.environment,
+            release=_s.sentry_release or None,
+        )
+    except Exception:  # noqa: BLE001 — never fail startup on observability
+        logger.exception("Sentry init failed; continuing without it")
+
     application = FastAPI(
         title="Marketplace API",
         version="0.1.0",
@@ -264,12 +277,38 @@ def create_app() -> FastAPI:
         await stop_purge_scheduler()
 
     # -----------------------------------------------------------------------
-    # Health endpoint
+    # Health endpoints
+    #
+    # /health and /healthz are liveness probes (no DB access) — used by the
+    # Docker HEALTHCHECK and container-orchestrator liveness probes.
+    # /healthz/ready is a readiness probe — it pings the DB and fails fast if
+    # the pool is exhausted or the DB is unreachable.  Used by the ALB target
+    # group health check.
     # -----------------------------------------------------------------------
 
     @application.get("/health", tags=["health"])
     async def health() -> dict[str, str]:
         return {"status": "ok", "version": "0.1.0"}
+
+    @application.get("/healthz", tags=["health"])
+    async def healthz() -> dict[str, str]:
+        return {"status": "ok"}
+
+    @application.get("/healthz/ready", tags=["health"])
+    async def healthz_ready() -> JSONResponse:
+        try:
+            from sqlalchemy import text
+            from app.db.session import AsyncSessionFactory
+
+            async with AsyncSessionFactory() as session:
+                await session.execute(text("SELECT 1"))
+            return JSONResponse(status_code=200, content={"status": "ready"})
+        except Exception as exc:  # noqa: BLE001 — readiness must not leak
+            logger.warning("readiness check failed: %s", exc)
+            return JSONResponse(
+                status_code=503,
+                content={"status": "not_ready", "reason": "db_unreachable"},
+            )
 
     # -----------------------------------------------------------------------
     # Routers
@@ -289,6 +328,16 @@ def create_app() -> FastAPI:
     application.include_router(admin_router, prefix="/api/v1")
     application.include_router(uploads_router, prefix="/api/v1")
     application.include_router(devices_router, prefix="/api/v1")
+
+    # -----------------------------------------------------------------------
+    # Prometheus — /metrics (admin token gated)
+    # -----------------------------------------------------------------------
+    try:
+        from app.core.observability import init_prometheus
+
+        init_prometheus(application)
+    except Exception:  # noqa: BLE001
+        logger.exception("Prometheus init failed; continuing without it")
 
     # -----------------------------------------------------------------------
     # WebSocket endpoint
