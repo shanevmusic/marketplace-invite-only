@@ -96,6 +96,19 @@ class Delivery(UUIDPKMixin, Base):
     duration_seconds: Mapped[Optional[int]] = mapped_column(
         sa.Integer, nullable=True
     )
+    current_eta_seconds: Mapped[Optional[int]] = mapped_column(
+        sa.Integer,
+        nullable=True,
+        comment=(
+            "Current ETA (seconds remaining to destination), as reported by "
+            "driver/seller app.  Safe to expose to the customer."
+        ),
+    )
+    current_eta_updated_at: Mapped[Optional[sa.DateTime]] = mapped_column(
+        sa.TIMESTAMP(timezone=True),
+        nullable=True,
+        comment="Timestamp at which current_eta_seconds was last updated.",
+    )
 
     # ------------------------------------------------------------------
     # Relationships

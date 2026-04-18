@@ -77,6 +77,19 @@ class OrderAnalyticsSnapshot(UUIDPKMixin, Base):
         nullable=False,
         comment="Copy of orders.delivered_at at snapshot time.",
     )
+    delivery_duration_seconds: Mapped["int | None"] = mapped_column(
+        sa.Integer,
+        nullable=True,
+        comment=(
+            "Copy of deliveries.duration_seconds (Phase 7).  Nullable for "
+            "snapshots written before Phase 7 or when no delivery row exists."
+        ),
+    )
+    delivery_distance_meters: Mapped["int | None"] = mapped_column(
+        sa.Integer,
+        nullable=True,
+        comment="Copy of deliveries.distance_meters (Phase 7).  Nullable.",
+    )
     created_at: Mapped[sa.DateTime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         nullable=False,

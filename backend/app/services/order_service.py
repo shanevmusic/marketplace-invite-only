@@ -568,10 +568,18 @@ async def mark_delivered(
         if caller.role == "seller" and caller.id != order.seller_id:
             raise OrderNotFound()
 
+    now = _now()
     order.status = "delivered"
-    order.delivered_at = _now()
+    order.delivered_at = now
     delivery.status = "delivered"
-    delivery.delivered_at = _now()
+    delivery.delivered_at = now
+    # Phase 7: stamp duration on completion.
+    if delivery.started_at is not None and delivery.duration_seconds is None:
+        started = delivery.started_at
+        if getattr(started, "tzinfo", None) is None:
+            started = started.replace(tzinfo=timezone.utc)  # type: ignore[union-attr]
+        delta = now - started  # type: ignore[operator]
+        delivery.duration_seconds = max(0, int(delta.total_seconds()))
     await db.flush()
     loaded = await _load_order_full(db, order.id)
     assert loaded is not None
@@ -631,6 +639,19 @@ async def _write_snapshot(db: AsyncSession, order: Order) -> None:
     )
     item_count = int(count_result.scalar_one() or 0)
 
+    # Phase 7: capture delivery metrics in the snapshot so they survive order
+    # hard-delete (ADR-0010).  Nullable — cancelled orders have no delivery.
+    delivery_duration_seconds: Optional[int] = None
+    delivery_distance_meters: Optional[int] = None
+    delivery_result = await db.execute(
+        sa.select(
+            Delivery.duration_seconds, Delivery.distance_meters
+        ).where(Delivery.order_id == order.id)
+    )
+    row = delivery_result.first()
+    if row is not None:
+        delivery_duration_seconds, delivery_distance_meters = row
+
     stmt = pg_insert(OrderAnalyticsSnapshot).values(
         id=uuid.uuid4(),
         order_id=order.id,
@@ -642,6 +663,8 @@ async def _write_snapshot(db: AsyncSession, order: Order) -> None:
         subtotal_minor=order.subtotal_minor,
         total_minor=order.total_minor,
         delivered_at=order.delivered_at or order.completed_at or _now(),
+        delivery_duration_seconds=delivery_duration_seconds,
+        delivery_distance_meters=delivery_distance_meters,
     ).on_conflict_do_nothing(index_elements=["order_id"])
     await db.execute(stmt)
 

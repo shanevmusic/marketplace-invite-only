@@ -17,7 +17,9 @@ from app.schemas.orders import (
     OrderListResponse,
     OrderResponse,
 )
+from app.services import delivery_tracking_service as dts
 from app.services import order_service
+from app.ws import gateway as ws_gateway
 
 
 router = APIRouter(prefix="/orders", tags=["orders"])
@@ -135,6 +137,12 @@ async def out_for_delivery(
     order = await order_service.out_for_delivery(
         db, caller=caller, order_id=order_id
     )
+    # Broadcast delivery.status (customer-safe) to all delivery subscribers.
+    started_at = order.delivery.started_at if order.delivery is not None else None
+    await ws_gateway.broadcast_delivery_event_all(
+        order.id,
+        dts.status_event(order.id, "out_for_delivery", started_at=started_at),
+    )
     return _render(order)
 
 
@@ -148,6 +156,11 @@ async def delivered(
 ) -> OrderResponse:
     order = await order_service.mark_delivered(
         db, caller=caller, order_id=order_id
+    )
+    delivered_at = order.delivered_at
+    await ws_gateway.broadcast_delivery_event_all(
+        order.id,
+        dts.status_event(order.id, "delivered", delivered_at=delivered_at),
     )
     return _render(order)
 
