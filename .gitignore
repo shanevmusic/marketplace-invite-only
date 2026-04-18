@@ -41,3 +41,9 @@ terraform.tfstate*
 
 # Logs
 *.log
+
+# Phase 2 additions
+backend/.venv/
+backend/**/__pycache__/
+backend/*.egg-info/
+backend/.env

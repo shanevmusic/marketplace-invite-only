@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "marketplace-backend"
+version = "0.1.0"
+description = "Invite-only marketplace — FastAPI backend"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+authors = [{ name = "Marketplace Team" }]
+
+dependencies = [
+    # Web framework
+    "fastapi>=0.115",
+    "uvicorn[standard]",
+    # Validation / settings
+    "pydantic>=2.8",
+    "pydantic-settings",
+    # Database (async)
+    "sqlalchemy[asyncio]>=2.0.32",
+    "asyncpg",
+    # Migrations (sync driver required by Alembic)
+    "alembic>=1.13",
+    "psycopg2-binary",
+    # Auth / crypto (Phase 3 — included now for stable pyproject)
+    "argon2-cffi",
+    "python-jose[cryptography]",
+    # Utilities
+    "orjson",
+    "python-dotenv",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "httpx",
+    "ruff",
+    "mypy",
+    "types-python-jose",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+# ---------------------------------------------------------------------------
+# Ruff — linter + formatter
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C4", "PT", "RUF"]
+ignore = ["B008"]  # FastAPI Depends() calls in defaults
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+# ---------------------------------------------------------------------------
+# Mypy — strict on app/
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+files = ["app/"]
+plugins = ["pydantic.mypy"]
+
+# ---------------------------------------------------------------------------
+# Pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

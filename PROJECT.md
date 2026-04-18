@@ -20,7 +20,7 @@ Build a production-ready, invite-only mobile marketplace where admins and seller
 | State mgmt | Riverpod | Decision confirmed Phase 8 |
 | Routing | go_router | Deep-link support for invite URLs |
 | Backend | Python 3.12 + FastAPI | Async, OpenAPI auto-gen |
-| DB | PostgreSQL 16 | Managed in prod (RDS / Cloud SQL) |
+| DB | PostgreSQL 16+ | Managed in prod (RDS / Cloud SQL). Dev sandbox uses 17; both accepted. |
 | Migrations | Alembic | |
 | ORM | SQLAlchemy 2.x (async) | |
 | Cache / pubsub | Redis 7 | WebSocket fanout, rate limiting |
@@ -148,7 +148,7 @@ Progress tracker. Each phase ends when its stop condition is met and the Orchest
 
 - [x] **Phase 0** — Kickoff & Orchestrator setup — conventions approved
 - [x] **Phase 1** — System architecture & PRD — frozen
-- [ ] **Phase 2** — Database schema + migrations
+- [x] **Phase 2** — Database schema + migrations — verified green on fresh DB
 - [ ] **Phase 3** — Backend A: auth + invite system
 - [ ] **Phase 4** — Backend B: sellers, stores, products
 - [ ] **Phase 5** — Backend C: orders & fulfillment
@@ -190,3 +190,4 @@ A phase is done when:
 
 - **Phase 0** — Orchestrator (2026-04-17): stack + product logic frozen, agent roster defined, conventions established, monorepo scaffolded, PROJECT.md created. **Ready for Phase 1.**
 - **Phase 1** — System Architect + Product Manager (2026-04-18): delivered `architecture.md`, `api-contract.md`, `er-diagram.md`, `prd.md` (28 P0 features). Orchestrator reconciliation in `phase-1-reconciliation.md` resolved all 15 architect/contract/ER open questions + 4 PM open questions. ADRs 0002–0009 recorded. **D2 closed.** **Ready for Phase 2.**
+- **Phase 2** — Database Engineer (2026-04-18): delivered SQLAlchemy 2.x models (20 tables, 5 app enums + citext, 1 materialized view), Alembic migration `0001_initial_schema`, idempotent seed script, `docs/schema.md`. Stop condition verified independently: clean `alembic upgrade head`, `seed_dev` produces 4 users + 1 store + 3 products, full downgrade/re-upgrade cycle works, CHECK constraints bite (rating range, conversation canonical ordering, deliveries actor presence, platform singleton), materialized view refreshes. Critical invariants confirmed: `messages` has no plaintext columns (ADR-0009), `order_analytics_snapshots` has zero FKs (survives purges). **Ready for Phase 3.**
