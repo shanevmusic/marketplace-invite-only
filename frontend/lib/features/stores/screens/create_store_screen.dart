@@ -44,8 +44,7 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen> {
             CreateStoreRequest(
               name: _name.text.trim(),
               city: _city.text.trim(),
-              description:
-                  _desc.text.trim().isEmpty ? null : _desc.text.trim(),
+              description: _desc.text.trim().isEmpty ? null : _desc.text.trim(),
             ),
           );
       final s = ref.read(myStoreControllerProvider);

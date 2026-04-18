@@ -127,7 +127,8 @@ class OrderListResponse {
 }
 
 class CreateOrderRequest {
-  const CreateOrderRequest({required this.items, required this.deliveryAddress});
+  const CreateOrderRequest(
+      {required this.items, required this.deliveryAddress});
   final List<({String productId, int quantity})> items;
   final DeliveryAddress deliveryAddress;
 

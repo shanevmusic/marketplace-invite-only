@@ -44,7 +44,8 @@ class _InMemoryStorage implements SecureAuthStorage {
   Future<String?> readUserJson() async => _m['user'];
 
   @override
-  Future<void> writeTokens({required String access, required String refresh}) async {
+  Future<void> writeTokens(
+      {required String access, required String refresh}) async {
     _m['access'] = access;
     _m['refresh'] = refresh;
   }

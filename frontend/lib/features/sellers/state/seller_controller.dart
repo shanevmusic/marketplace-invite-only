@@ -8,8 +8,7 @@ final sellerApiProvider = Provider<SellerApi>((ref) {
   return SellerApi(ref.watch(apiClientProvider));
 });
 
-class SellerDashboardController
-    extends AsyncNotifier<SellerDashboardResponse> {
+class SellerDashboardController extends AsyncNotifier<SellerDashboardResponse> {
   @override
   Future<SellerDashboardResponse> build() async {
     return ref.read(sellerApiProvider).myDashboard();
@@ -17,8 +16,8 @@ class SellerDashboardController
 
   Future<void> refresh() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(
-        () => ref.read(sellerApiProvider).myDashboard());
+    state =
+        await AsyncValue.guard(() => ref.read(sellerApiProvider).myDashboard());
   }
 }
 

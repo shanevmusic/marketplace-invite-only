@@ -72,8 +72,7 @@ class OrderStateActionPanel extends ConsumerStatefulWidget {
       _OrderStateActionPanelState();
 }
 
-class _OrderStateActionPanelState
-    extends ConsumerState<OrderStateActionPanel> {
+class _OrderStateActionPanelState extends ConsumerState<OrderStateActionPanel> {
   bool _busy = false;
 
   Future<void> _invoke(OrderAction a) async {
@@ -101,8 +100,7 @@ class _OrderStateActionPanelState
 
   @override
   Widget build(BuildContext context) {
-    final actions =
-        ref.watch(orderStateActionsProvider(widget.order.status));
+    final actions = ref.watch(orderStateActionsProvider(widget.order.status));
     if (actions.isEmpty) return const SizedBox.shrink();
     return Wrap(
       spacing: AppSpacing.s2,

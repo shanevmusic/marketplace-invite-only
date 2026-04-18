@@ -18,9 +18,7 @@ class TabBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!visible) return child;
     final scheme = context.colors;
-    final label = count == null
-        ? ''
-        : (count! > 99 ? '99+' : '$count');
+    final label = count == null ? '' : (count! > 99 ? '99+' : '$count');
     return Stack(
       clipBehavior: Clip.none,
       children: [

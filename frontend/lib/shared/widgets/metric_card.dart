@@ -23,7 +23,8 @@ class MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppCard(
-      variant: onTap != null ? AppCardVariant.interactive : AppCardVariant.standard,
+      variant:
+          onTap != null ? AppCardVariant.interactive : AppCardVariant.standard,
       onTap: onTap,
       semanticsLabel: onTap != null
           ? '$label, $value${caption != null ? ', ${caption!}' : ''}'

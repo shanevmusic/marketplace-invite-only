@@ -77,8 +77,7 @@ class _ImageGalleryState extends State<ImageGallery> {
                         shape: BoxShape.circle,
                         color: i == _index
                             ? context.colors.onSurface
-                            : context.colors.onSurface
-                                .withValues(alpha: 0.3),
+                            : context.colors.onSurface.withValues(alpha: 0.3),
                       ),
                     ),
                 ],

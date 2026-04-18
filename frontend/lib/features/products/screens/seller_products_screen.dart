@@ -38,8 +38,7 @@ class SellerProductsScreen extends ConsumerWidget {
               headline: 'No products yet',
               subhead: 'Add your first product to start selling.',
               ctaLabel: 'Add product',
-              onCtaPressed: () =>
-                  context.go('${AppRoutes.sellerProducts}/new'),
+              onCtaPressed: () => context.go('${AppRoutes.sellerProducts}/new'),
             );
           }
           return RefreshIndicator(
@@ -63,8 +62,7 @@ class SellerProductsScreen extends ConsumerWidget {
                         height: 56,
                         decoration: BoxDecoration(
                           color: context.colors.surfaceContainerHighest,
-                          borderRadius:
-                              BorderRadius.circular(AppRadius.sm),
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
                         ),
                         alignment: Alignment.center,
                         child: Icon(Icons.inventory_2_outlined,
@@ -75,8 +73,7 @@ class SellerProductsScreen extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(p.name,
-                                style: context.textStyles.titleMedium),
+                            Text(p.name, style: context.textStyles.titleMedium),
                             const SizedBox(height: AppSpacing.s1),
                             Text(
                               '${formatMoney(p.priceMinor, currencyCode: p.currencyCode)} · ${p.stockQuantity} in stock',

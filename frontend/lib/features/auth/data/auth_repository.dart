@@ -164,6 +164,8 @@ class AuthRepository {
 
   Future<MeResponse> getCurrentUser() => _api.getMe();
 
+  String? currentAccessToken() => _session?.accessToken;
+
   Future<InviteValidation> validateInvite(String token) =>
       _api.validateInvite(token);
 

@@ -196,8 +196,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     const SizedBox(height: AppSpacing.s2),
                     _RoleChoiceCard(
                       label: 'Customer',
-                      description:
-                          "Browse and order from "
+                      description: "Browse and order from "
                           "${widget.args.inviterName ?? 'their'} store",
                       selected: _roleChoice == 'customer',
                       onTap: () => setState(() => _roleChoice = 'customer'),
@@ -205,8 +204,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     const SizedBox(height: AppSpacing.s2),
                     _RoleChoiceCard(
                       label: 'Seller',
-                      description:
-                          'Run your own store, invited by '
+                      description: 'Run your own store, invited by '
                           '${widget.args.inviterName ?? 'them'}',
                       selected: _roleChoice == 'seller',
                       onTap: () => setState(() => _roleChoice = 'seller'),

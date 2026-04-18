@@ -41,8 +41,7 @@ class OrderStatusTimeline extends StatelessWidget {
       final filled = steps.takeWhile((s) => s.at != null).toList();
       filled.add(_Step('Cancelled', cancelledAt, cancelled: true));
       return Semantics(
-        label:
-            'Order status: ${OrderStatusChip.humanLabel(currentStatus)}',
+        label: 'Order status: ${OrderStatusChip.humanLabel(currentStatus)}',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -131,9 +130,8 @@ class _StepRow extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(vertical: 6),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: filled || step.cancelled
-                      ? dotColor
-                      : Colors.transparent,
+                  color:
+                      filled || step.cancelled ? dotColor : Colors.transparent,
                   border: Border.all(color: dotColor, width: 2),
                 ),
               ),
@@ -156,9 +154,8 @@ class _StepRow extends StatelessWidget {
                   Text(
                     step.label,
                     style: context.textStyles.titleSmall?.copyWith(
-                      color: filled
-                          ? scheme.onSurface
-                          : scheme.onSurfaceVariant,
+                      color:
+                          filled ? scheme.onSurface : scheme.onSurfaceVariant,
                       fontWeight: isCurrent ? FontWeight.w700 : null,
                     ),
                   ),

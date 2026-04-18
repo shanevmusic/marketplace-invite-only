@@ -37,7 +37,15 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
   @override
   void dispose() {
-    for (final c in [_line1, _line2, _city, _region, _postal, _country, _notes]) {
+    for (final c in [
+      _line1,
+      _line2,
+      _city,
+      _region,
+      _postal,
+      _country,
+      _notes
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -108,17 +116,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Summary',
-                        style: context.textStyles.titleMedium),
+                    Text('Summary', style: context.textStyles.titleMedium),
                     const SizedBox(height: AppSpacing.s2),
                     for (final l in bucket.lines)
                       Padding(
-                        padding:
-                            const EdgeInsets.only(bottom: AppSpacing.s1),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.s1),
                         child: Row(
                           children: [
-                            Expanded(
-                                child: Text('${l.quantity}× ${l.name}')),
+                            Expanded(child: Text('${l.quantity}× ${l.name}')),
                             Text(formatMoney(l.lineTotalMinor,
                                 currencyCode: bucket.currencyCode)),
                           ],
@@ -141,8 +146,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.s4),
-              Text('Delivery address',
-                  style: context.textStyles.titleMedium),
+              Text('Delivery address', style: context.textStyles.titleMedium),
               const SizedBox(height: AppSpacing.s2),
               AppTextField(label: 'Address line 1', controller: _line1),
               const SizedBox(height: AppSpacing.s2),
@@ -162,8 +166,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 child: Row(
                   children: [
                     Icon(Icons.lock_outline,
-                        size: 16,
-                        color: context.colors.onSurfaceVariant),
+                        size: 16, color: context.colors.onSurfaceVariant),
                     const SizedBox(width: AppSpacing.s2),
                     Expanded(
                       child: Text(

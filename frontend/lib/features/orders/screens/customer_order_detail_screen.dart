@@ -46,18 +46,15 @@ class CustomerOrderDetailScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Items',
-                          style: context.textStyles.titleMedium),
+                      Text('Items', style: context.textStyles.titleMedium),
                       const SizedBox(height: AppSpacing.s2),
                       for (final it in o.items)
                         Padding(
-                          padding:
-                              const EdgeInsets.only(bottom: AppSpacing.s2),
+                          padding: const EdgeInsets.only(bottom: AppSpacing.s2),
                           child: Row(
                             children: [
                               Expanded(
-                                  child:
-                                      Text('${it.quantity}× ${it.name}')),
+                                  child: Text('${it.quantity}× ${it.name}')),
                               Text(formatMoney(it.lineTotalMinor,
                                   currencyCode: o.currencyCode)),
                             ],

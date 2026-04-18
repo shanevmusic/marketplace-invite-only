@@ -12,6 +12,8 @@ import '../../features/auth/screens/signup_screen.dart';
 import '../../features/auth/screens/splash_screen.dart';
 import '../../features/auth/state/auth_controller.dart';
 import '../../features/checkout/screens/checkout_screen.dart';
+import '../../features/messaging/screens/conversation_detail_screen.dart';
+import '../../features/messaging/screens/conversations_list_screen.dart';
 import '../../features/orders/screens/customer_order_detail_screen.dart';
 import '../../features/orders/screens/seller_order_detail_screen.dart';
 import '../../features/products/screens/product_detail_screen.dart';
@@ -19,6 +21,9 @@ import '../../features/products/screens/product_form_screen.dart';
 import '../../features/products/state/product_controller.dart';
 import '../../features/shell/role_shell.dart';
 import '../../features/stores/screens/create_store_screen.dart';
+import '../../features/tracking/customer/screens/customer_tracking_screen.dart';
+import '../../features/tracking/driver/screens/driver_tracking_screen.dart';
+import '../../features/tracking/seller/screens/seller_tracking_screen.dart';
 import 'routes.dart';
 
 /// Listenable that fires when the AuthController's AsyncValue transitions.
@@ -98,7 +103,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home/driver',
         builder: (_, __) => const DriverShell(),
-        routes: _basicSubRoutes,
+        routes: _driverSubRoutes,
       ),
       GoRoute(
         path: '/home/admin',
@@ -139,6 +144,13 @@ final List<RouteBase> _customerSubRoutes = [
         path: ':id',
         builder: (_, s) =>
             CustomerOrderDetailScreen(orderId: s.pathParameters['id']!),
+        routes: [
+          GoRoute(
+            path: 'tracking',
+            builder: (_, s) =>
+                CustomerTrackingScreen(orderId: s.pathParameters['id']!),
+          ),
+        ],
       ),
     ],
   ),
@@ -148,7 +160,15 @@ final List<RouteBase> _customerSubRoutes = [
   ),
   GoRoute(
     path: 'messages',
-    builder: (_, __) => const CustomerShell(),
+    builder: (_, __) => const ConversationsListScreen(),
+    routes: [
+      GoRoute(
+        path: ':id',
+        builder: (_, s) => ConversationDetailScreen(
+          conversationId: s.pathParameters['id']!,
+        ),
+      ),
+    ],
   ),
   GoRoute(
     path: 'profile',
@@ -191,12 +211,42 @@ final List<RouteBase> _sellerSubRoutes = [
         path: ':id',
         builder: (_, s) =>
             SellerOrderDetailScreen(orderId: s.pathParameters['id']!),
+        routes: [
+          GoRoute(
+            path: 'tracking',
+            builder: (_, s) =>
+                SellerTrackingScreen(orderId: s.pathParameters['id']!),
+          ),
+        ],
+      ),
+    ],
+  ),
+  GoRoute(
+    path: 'messages',
+    builder: (_, __) => const ConversationsListScreen(),
+    routes: [
+      GoRoute(
+        path: ':id',
+        builder: (_, s) => ConversationDetailScreen(
+          conversationId: s.pathParameters['id']!,
+        ),
       ),
     ],
   ),
   GoRoute(
     path: 'profile',
     builder: (_, __) => const SellerShell(),
+  ),
+];
+
+final List<RouteBase> _driverSubRoutes = [
+  GoRoute(
+    path: ':tab',
+    builder: (_, __) => const SizedBox.shrink(),
+  ),
+  GoRoute(
+    path: 'orders/:id/tracking',
+    builder: (_, s) => DriverTrackingScreen(orderId: s.pathParameters['id']!),
   ),
 ];
 

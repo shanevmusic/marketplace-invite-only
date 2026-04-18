@@ -80,8 +80,8 @@ class _StepperButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = context.colors.onSurfaceVariant
-        .withValues(alpha: enabled ? 1.0 : 0.38);
+    final color =
+        context.colors.onSurfaceVariant.withValues(alpha: enabled ? 1.0 : 0.38);
     return Semantics(
       button: true,
       enabled: enabled,

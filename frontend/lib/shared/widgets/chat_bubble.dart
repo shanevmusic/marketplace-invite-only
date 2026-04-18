@@ -1,12 +1,21 @@
-// Phase 10 widget stubbed for Phase 8. Contract: accepts ONLY decrypted
-// plaintext. This widget must never expose a `ciphertext` parameter — see
-// ADR-0009/0013 and frontend-spec/02-component-library.md §6.
+// Phase 10 extension of the Phase 8 scaffold. Contract: accepts ONLY
+// decrypted plaintext. This widget must never expose a `ciphertext`
+// parameter — see ADR-0009/0013 and the crypto-boundary invariant test.
 import 'package:flutter/material.dart';
 
 import '../../app/theme/theme_extensions.dart';
 import '../../app/theme/tokens.dart';
 
-enum MessageStatus { sending, sent, read, failed }
+/// 7-state machine per frontend-spec/phase-10-messaging.md §4.1.
+enum MessageStatus {
+  pending,
+  sending,
+  sent,
+  delivered,
+  read,
+  failed,
+  decryptionError,
+}
 
 class ChatBubble extends StatelessWidget {
   const ChatBubble({
@@ -16,6 +25,8 @@ class ChatBubble extends StatelessWidget {
     required this.sentAt,
     required this.status,
     this.onRetry,
+    this.onLongPress,
+    this.senderDisplayName,
   });
 
   /// Already-decrypted plaintext. Never ciphertext, never base64.
@@ -24,12 +35,23 @@ class ChatBubble extends StatelessWidget {
   final DateTime sentAt;
   final MessageStatus status;
   final VoidCallback? onRetry;
+  final VoidCallback? onLongPress;
+  final String? senderDisplayName;
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colors;
-    final bg = isMine ? scheme.primary : scheme.surfaceContainerHighest;
-    final fg = isMine ? scheme.onPrimary : scheme.onSurfaceVariant;
+    final isError = status == MessageStatus.decryptionError;
+    final bg = isError
+        ? scheme.surfaceContainerHighest
+        : isMine
+            ? scheme.primary
+            : scheme.surfaceContainerHighest;
+    final fg = isError
+        ? scheme.onSurfaceVariant
+        : isMine
+            ? scheme.onPrimary
+            : scheme.onSurfaceVariant;
     final alignment = isMine ? Alignment.centerRight : Alignment.centerLeft;
 
     final radius = BorderRadius.only(
@@ -39,58 +61,127 @@ class ChatBubble extends StatelessWidget {
       bottomRight: Radius.circular(isMine ? 4 : AppRadius.md),
     );
 
-    return Align(
-      alignment: alignment,
-      child: ConstraintsFor72Percent(
-        child: Opacity(
-          opacity: status == MessageStatus.sending ? 0.6 : 1.0,
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: AppSpacing.s1),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.s4,
-              vertical: AppSpacing.s3,
+    final opacity = switch (status) {
+      MessageStatus.pending => 0.6,
+      MessageStatus.sending => 0.7,
+      MessageStatus.decryptionError => 0.8,
+      _ => 1.0,
+    };
+
+    final decoration = BoxDecoration(
+      color: bg,
+      borderRadius: radius,
+      border: status == MessageStatus.failed
+          ? Border(left: BorderSide(color: scheme.error, width: 2))
+          : null,
+    );
+
+    final body = Opacity(
+      opacity: opacity,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: AppSpacing.s1),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.s4,
+          vertical: AppSpacing.s3,
+        ),
+        decoration: decoration,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              isError ? "🔒 Couldn't decrypt this message" : text,
+              style:
+                  (context.textStyles.bodyMedium ?? const TextStyle()).copyWith(
+                color: fg,
+                fontStyle: isError ? FontStyle.italic : FontStyle.normal,
+              ),
             ),
-            decoration: BoxDecoration(color: bg, borderRadius: radius),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            const SizedBox(height: AppSpacing.s1),
+            Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(text, style: context.textStyles.bodyMedium?.copyWith(color: fg)),
-                const SizedBox(height: AppSpacing.s1),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _formatTime(sentAt),
-                      style: context.textStyles.labelSmall?.copyWith(color: fg),
-                    ),
-                    if (isMine) ...[
-                      const SizedBox(width: AppSpacing.s1),
-                      _statusIcon(context, fg),
-                    ],
-                  ],
+                Text(
+                  _formatTime(sentAt),
+                  style: context.textStyles.labelSmall?.copyWith(color: fg),
                 ),
+                if (isMine) ...[
+                  const SizedBox(width: AppSpacing.s1),
+                  _statusIcon(context, fg),
+                ],
               ],
             ),
-          ),
+          ],
         ),
+      ),
+    );
+
+    final captioned = status == MessageStatus.pending
+        ? Column(
+            crossAxisAlignment:
+                isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            children: [
+              body,
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  'Will send when online',
+                  style: context.textStyles.labelSmall
+                      ?.copyWith(fontStyle: FontStyle.italic),
+                ),
+              ),
+            ],
+          )
+        : body;
+
+    final tappable = GestureDetector(
+      onTap: status == MessageStatus.failed ? onRetry : null,
+      onLongPress: onLongPress,
+      child: captioned,
+    );
+
+    return Semantics(
+      label: _semanticsLabel(),
+      child: Align(
+        alignment: alignment,
+        child: ConstraintsFor72Percent(child: tappable),
       ),
     );
   }
 
   Widget _statusIcon(BuildContext context, Color fg) {
     switch (status) {
+      case MessageStatus.pending:
+        return Icon(Icons.schedule, size: 12, color: fg.withValues(alpha: 0.6));
       case MessageStatus.sending:
         return Icon(Icons.access_time, size: 12, color: fg);
       case MessageStatus.sent:
         return Icon(Icons.check, size: 12, color: fg);
+      case MessageStatus.delivered:
+        return Icon(Icons.done_all, size: 12, color: fg.withValues(alpha: 0.6));
       case MessageStatus.read:
-        return Icon(Icons.done_all, size: 12, color: fg);
+        return Icon(Icons.done_all, size: 12, color: context.colors.tertiary);
       case MessageStatus.failed:
-        return GestureDetector(
-          onTap: onRetry,
-          child: Icon(Icons.error_outline, size: 12, color: context.colors.error),
-        );
+        return Icon(Icons.error_outline, size: 12, color: context.colors.error);
+      case MessageStatus.decryptionError:
+        return Icon(Icons.lock_outline, size: 12, color: fg);
     }
+  }
+
+  String _semanticsLabel() {
+    final who = isMine ? 'You said' : '${senderDisplayName ?? 'Peer'} said';
+    final statusLabel = switch (status) {
+      MessageStatus.pending => ' Pending — will send when online.',
+      MessageStatus.sending => ' Sending.',
+      MessageStatus.sent => ' Sent.',
+      MessageStatus.delivered => ' Delivered.',
+      MessageStatus.read => ' Read.',
+      MessageStatus.failed => ' Failed. Double-tap to retry.',
+      MessageStatus.decryptionError => ' Could not be decrypted.',
+    };
+    final body = status == MessageStatus.decryptionError
+        ? "Couldn't decrypt this message"
+        : text;
+    return '$who: $body. Sent ${_formatTime(sentAt)}.$statusLabel';
   }
 
   String _formatTime(DateTime dt) {

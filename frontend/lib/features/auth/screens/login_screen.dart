@@ -41,8 +41,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   bool get _valid =>
-      _emailRegex.hasMatch(_email.text.trim()) &&
-      _password.text.length >= 1;
+      _emailRegex.hasMatch(_email.text.trim()) && _password.text.length >= 1;
 
   Future<void> _submit() async {
     if (!_valid) return;

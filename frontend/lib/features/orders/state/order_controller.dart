@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/api/api_client.dart';
+import '../../realtime/ws_client.dart';
+import '../../realtime/ws_event.dart';
+import '../../tracking/shared/delivery_status.dart';
 import '../data/order_api.dart';
 import '../data/order_dtos.dart';
 
@@ -78,34 +81,56 @@ final orderByIdProvider =
   return ref.read(orderApiProvider).get(id);
 });
 
-/// Polled customer order detail — 30s cadence, cancels on dispose.
+/// Customer order detail. Initial fetch then live updates from the
+/// `delivery:{orderId}` WS channel. ADR-0014: only status + eta are consumed;
+/// coordinate-bearing events are ignored. No 30s polling.
 class CustomerOrderDetailController
     extends FamilyAsyncNotifier<OrderResponse, String> {
-  Timer? _timer;
+  StreamSubscription<WsEvent>? _sub;
 
   @override
   Future<OrderResponse> build(String orderId) async {
-    ref.onDispose(() {
-      _timer?.cancel();
-      _timer = null;
+    final ws = ref.read(wsClientProvider);
+    ws.subscribe(deliveryChannel(orderId));
+    _sub = ws.events.listen((ev) {
+      if (ev.channel != deliveryChannel(orderId)) return;
+      _applyWs(ev);
     });
-    _scheduleNext();
+    ref.onDispose(() {
+      _sub?.cancel();
+      ws.unsubscribe(deliveryChannel(orderId));
+    });
     return ref.read(orderApiProvider).get(orderId);
   }
 
-  void _scheduleNext() {
-    _timer?.cancel();
-    _timer = Timer(const Duration(seconds: 30), _poll);
-  }
-
-  Future<void> _poll() async {
-    try {
-      final next = await ref.read(orderApiProvider).get(arg);
-      state = AsyncValue.data(next);
-    } catch (_) {
-      // keep last-known state
+  void _applyWs(WsEvent ev) {
+    final cur = state.value;
+    if (cur == null) return;
+    switch (ev.type) {
+      case 'delivery.status':
+        final s = ev.data['status'] as String?;
+        if (s == null) return;
+        // Parse to validate then write canonical string.
+        parseStatus(s);
+        state = AsyncValue.data(OrderResponse(
+          id: cur.id,
+          sellerId: cur.sellerId,
+          customerId: cur.customerId,
+          status: s,
+          totalMinor: cur.totalMinor,
+          currencyCode: cur.currencyCode,
+          items: cur.items,
+          deliveryAddress: cur.deliveryAddress,
+          createdAt: cur.createdAt,
+          storeName: cur.storeName,
+        ));
+        return;
+      default:
+        // Ignore non-status events (incl. delivery.location) on the
+        // customer-facing order detail. Tracking view has its own controller
+        // with a coord-free type allow-list.
+        return;
     }
-    _scheduleNext();
   }
 
   Future<void> refreshNow() async {

@@ -91,7 +91,8 @@ class CustomerShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cartCount = ref.watch(cartControllerProvider).valueOrNull?.totalItems ?? 0;
+    final cartCount =
+        ref.watch(cartControllerProvider).valueOrNull?.totalItems ?? 0;
     return _ShellScaffold(
       title: 'Discover',
       tabs: [

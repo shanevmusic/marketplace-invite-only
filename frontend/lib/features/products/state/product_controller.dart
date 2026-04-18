@@ -9,8 +9,7 @@ final productApiProvider = Provider<ProductApi>((ref) {
 });
 
 /// Seller's own products (by seller_id inferred server-side via auth).
-class MyProductsController
-    extends AsyncNotifier<List<ProductResponse>> {
+class MyProductsController extends AsyncNotifier<List<ProductResponse>> {
   @override
   Future<List<ProductResponse>> build() async {
     final api = ref.read(productApiProvider);
@@ -60,8 +59,7 @@ final myProductsControllerProvider =
 
 /// Customer-facing list by seller id.
 final productsBySellerProvider =
-    FutureProvider.family<List<ProductResponse>, String>(
-        (ref, sellerId) async {
+    FutureProvider.family<List<ProductResponse>, String>((ref, sellerId) async {
   final r = await ref.read(productApiProvider).list(sellerId: sellerId);
   return r.items;
 });

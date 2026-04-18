@@ -21,8 +21,7 @@ abstract class AppRoutes {
   static const customerMessages = '/home/customer/messages';
   static const customerProfile = '/home/customer/profile';
 
-  static String customerProduct(String id) =>
-      '$customerDiscover/product/$id';
+  static String customerProduct(String id) => '$customerDiscover/product/$id';
   static String customerSeller(String id) => '$customerDiscover/seller/$id';
   static String customerOrderDetail(String id) => '$customerOrders/$id';
 

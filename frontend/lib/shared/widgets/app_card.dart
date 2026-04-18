@@ -51,7 +51,8 @@ class AppCard extends StatelessWidget {
           : content,
     );
     if (semanticsLabel != null) {
-      return Semantics(label: semanticsLabel, button: onTap != null, child: mat);
+      return Semantics(
+          label: semanticsLabel, button: onTap != null, child: mat);
     }
     return mat;
   }

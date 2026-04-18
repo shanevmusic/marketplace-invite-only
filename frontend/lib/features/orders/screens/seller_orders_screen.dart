@@ -40,14 +40,12 @@ class SellerOrdersScreen extends ConsumerWidget {
           child: ListView.separated(
             padding: const EdgeInsets.all(AppSpacing.s4),
             itemCount: orders.length,
-            separatorBuilder: (_, __) =>
-                const SizedBox(height: AppSpacing.s3),
+            separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.s3),
             itemBuilder: (_, i) {
               final o = orders[i];
               return AppCard(
                 variant: AppCardVariant.interactive,
-                onTap: () =>
-                    context.go('${AppRoutes.sellerOrders}/${o.id}'),
+                onTap: () => context.go('${AppRoutes.sellerOrders}/${o.id}'),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

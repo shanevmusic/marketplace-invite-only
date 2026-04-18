@@ -70,8 +70,7 @@ class SellerOrderDetailScreen extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.s2),
                     for (final it in o.items)
                       Padding(
-                        padding:
-                            const EdgeInsets.only(bottom: AppSpacing.s2),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.s2),
                         child: Row(
                           children: [
                             Expanded(child: Text('${it.quantity}× ${it.name}')),

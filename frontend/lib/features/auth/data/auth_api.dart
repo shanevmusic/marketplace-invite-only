@@ -7,7 +7,8 @@ import 'auth_dtos.dart';
 /// owns tokens and injects them via the Dio interceptor built in
 /// token_interceptor.dart.
 class AuthApi {
-  AuthApi({Dio? dio}) : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
+  AuthApi({Dio? dio})
+      : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
 
   final Dio _dio;
   Dio get dio => _dio;

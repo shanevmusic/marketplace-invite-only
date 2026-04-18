@@ -122,7 +122,6 @@ class UpdateProductRequest {
         if (priceMinor != null) 'price_minor': priceMinor,
         if (stockQuantity != null) 'stock_quantity': stockQuantity,
         if (isActive != null) 'is_active': isActive,
-        if (images != null)
-          'images': images!.map((e) => e.toJson()).toList(),
+        if (images != null) 'images': images!.map((e) => e.toJson()).toList(),
       };
 }

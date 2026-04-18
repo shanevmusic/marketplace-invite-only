@@ -65,9 +65,7 @@ class AppListTile extends StatelessWidget {
       ),
     );
 
-    final content = onTap != null
-        ? InkWell(onTap: onTap, child: row)
-        : row;
+    final content = onTap != null ? InkWell(onTap: onTap, child: row) : row;
 
     final semantic = Semantics(
       button: onTap != null,

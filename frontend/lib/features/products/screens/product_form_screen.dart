@@ -48,7 +48,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
 
   Future<void> _submit() async {
     if (_name.text.trim().isEmpty || (_priceMinor ?? 0) <= 0) {
-      context.showAppSnackbar(message: 'Name and a positive price are required');
+      context.showAppSnackbar(
+          message: 'Name and a positive price are required');
       return;
     }
     setState(() => _busy = true);
@@ -105,8 +106,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   Widget build(BuildContext context) {
     final editing = widget.existing != null;
     return Scaffold(
-      appBar:
-          AppTopBar(title: editing ? 'Edit product' : 'New product'),
+      appBar: AppTopBar(title: editing ? 'Edit product' : 'New product'),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.s4),

@@ -41,8 +41,10 @@ void main() {
         final src = f.readAsStringSync();
         // Strip out line comments & block comments so narrative text in
         // banner comments does not trigger the guard.
-        final withoutLineComments =
-            src.split('\n').where((l) => !l.trimLeft().startsWith('//')).join('\n');
+        final withoutLineComments = src
+            .split('\n')
+            .where((l) => !l.trimLeft().startsWith('//'))
+            .join('\n');
         for (final r in forbidden) {
           if (r.hasMatch(withoutLineComments)) {
             violations.add('$path matches ${r.pattern}');

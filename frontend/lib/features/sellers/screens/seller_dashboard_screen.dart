@@ -30,8 +30,7 @@ class SellerDashboardScreen extends ConsumerWidget {
           return AppEmptyState(
             icon: Icons.storefront_outlined,
             headline: 'Create your store',
-            subhead:
-                'Give it a name and city so customers can find you.',
+            subhead: 'Give it a name and city so customers can find you.',
             ctaLabel: 'Create store',
             onCtaPressed: () =>
                 context.go('${AppRoutes.sellerDashboard}/store/new'),
@@ -39,9 +38,8 @@ class SellerDashboardScreen extends ConsumerWidget {
         }
         final dashAsync = ref.watch(sellerDashboardControllerProvider);
         return RefreshIndicator(
-          onRefresh: () => ref
-              .read(sellerDashboardControllerProvider.notifier)
-              .refresh(),
+          onRefresh: () =>
+              ref.read(sellerDashboardControllerProvider.notifier).refresh(),
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.s4),
             children: [

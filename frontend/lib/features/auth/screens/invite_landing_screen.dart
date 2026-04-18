@@ -85,7 +85,8 @@ class _InviteLandingScreenState extends ConsumerState<InviteLandingScreen> {
         headline: headline,
         subhead: subhead,
         ctaLabel: err.isNetwork ? 'Retry' : 'Close',
-        onCtaPressed: err.isNetwork ? _validate : () => context.go(AppRoutes.login),
+        onCtaPressed:
+            err.isNetwork ? _validate : () => context.go(AppRoutes.login),
       );
     }
 
@@ -131,21 +132,28 @@ class _InviteLandingScreenState extends ConsumerState<InviteLandingScreen> {
   (String, String) _errorCopy(AuthApiException e) {
     switch (e.code) {
       case 'INVITE_NOT_FOUND':
-        return ('Invite not recognized',
-            "This link isn't valid. Ask for a new invite.");
+        return (
+          'Invite not recognized',
+          "This link isn't valid. Ask for a new invite."
+        );
       case 'INVITE_EXPIRED':
-        return ('Invite expired',
-            'Invites expire for security. Ask for a fresh link.');
+        return (
+          'Invite expired',
+          'Invites expire for security. Ask for a fresh link.'
+        );
       case 'INVITE_ALREADY_USED':
-        return ('Invite already used',
-            "This invite has already been claimed. If that wasn't you, "
-                'contact an admin.');
+        return (
+          'Invite already used',
+          "This invite has already been claimed. If that wasn't you, "
+              'contact an admin.'
+        );
       case 'NETWORK':
-        return ("Can't verify invite",
-            'Check your connection and try again.');
+        return ("Can't verify invite", 'Check your connection and try again.');
       default:
-        return ('Invite unavailable',
-            e.message ?? 'Try again or ask for a new invite.');
+        return (
+          'Invite unavailable',
+          e.message ?? 'Try again or ask for a new invite.'
+        );
     }
   }
 }

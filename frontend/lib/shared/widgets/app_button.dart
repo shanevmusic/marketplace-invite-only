@@ -125,13 +125,15 @@ class AppButton extends StatelessWidget {
       ),
     );
 
-    final sized = expand ? SizedBox(width: double.infinity, child: button) : button;
+    final sized =
+        expand ? SizedBox(width: double.infinity, child: button) : button;
 
     return Semantics(
       button: true,
       enabled: !disabled,
       label: semanticsLabel ?? label,
-      child: Opacity(opacity: disabled && !isLoading ? 0.38 : 1.0, child: sized),
+      child:
+          Opacity(opacity: disabled && !isLoading ? 0.38 : 1.0, child: sized),
     );
   }
 

@@ -219,8 +219,7 @@ class AuthApiException implements Exception {
   bool get isRateLimited => statusCode == 429;
   bool get isInvalidCredentials =>
       code == 'AUTH_INVALID_CREDENTIALS' || code == 'INVALID_CREDENTIALS';
-  bool get isEmailTaken =>
-      code == 'AUTH_EMAIL_TAKEN' || code == 'EMAIL_TAKEN';
+  bool get isEmailTaken => code == 'AUTH_EMAIL_TAKEN' || code == 'EMAIL_TAKEN';
   bool get isTokenExpired =>
       code == 'AUTH_TOKEN_EXPIRED' ||
       code == 'AUTH_TOKEN_INVALID' ||

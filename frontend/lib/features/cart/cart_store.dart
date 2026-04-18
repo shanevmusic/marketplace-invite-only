@@ -63,8 +63,7 @@ class SellerCart {
   final String currencyCode;
   final List<CartLine> lines;
 
-  int get subtotalMinor =>
-      lines.fold<int>(0, (s, l) => s + l.lineTotalMinor);
+  int get subtotalMinor => lines.fold<int>(0, (s, l) => s + l.lineTotalMinor);
   int get itemCount => lines.fold<int>(0, (s, l) => s + l.quantity);
 
   SellerCart copyWith({List<CartLine>? lines, String? storeName}) => SellerCart(
@@ -95,8 +94,7 @@ class CartState {
   const CartState({required this.buckets});
   final Map<String, SellerCart> buckets;
 
-  int get totalItems =>
-      buckets.values.fold<int>(0, (s, b) => s + b.itemCount);
+  int get totalItems => buckets.values.fold<int>(0, (s, b) => s + b.itemCount);
 
   Map<String, dynamic> toJson() =>
       {'v': 1, 'buckets': buckets.map((k, v) => MapEntry(k, v.toJson()))};
@@ -204,7 +202,8 @@ class CartController extends AsyncNotifier<CartState> {
 
   Future<void> clearBucket(String sellerId) async {
     final current = state.value ?? CartState.empty();
-    final next = Map<String, SellerCart>.from(current.buckets)..remove(sellerId);
+    final next = Map<String, SellerCart>.from(current.buckets)
+      ..remove(sellerId);
     await _persist(CartState(buckets: next));
   }
 
