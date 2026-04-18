@@ -29,6 +29,9 @@ dependencies = [
     # Utilities
     "orjson",
     "python-dotenv",
+    # Phase 12 — rate limiting + S3 uploads
+    "slowapi",
+    "boto3",
 ]
 
 [project.optional-dependencies]
@@ -39,6 +42,7 @@ dev = [
     "ruff",
     "mypy",
     "types-python-jose",
+    "moto",
 ]
 
 [tool.setuptools.packages.find]
