@@ -23,7 +23,6 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
-  String? _formError;
   bool _submitted = false;
 
   @override
@@ -46,7 +45,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _submit() async {
     if (!_valid) return;
     setState(() {
-      _formError = null;
       _submitted = true;
     });
     try {

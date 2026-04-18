@@ -24,40 +24,53 @@ pointer to the commit/module, or (2) explicitly deferred with rationale.
   X-Content-Type-Options.
 - **Status**: ✅ Implemented via `SecurityHeadersMiddleware` in `app.main`.
 
-## Deferred
+## Deferred to v1.1 — tracked in `POST-V1-BACKLOG.md`
+
+Each entry below was reviewed in Phase 14 and migrated to
+[`POST-V1-BACKLOG.md`](./POST-V1-BACKLOG.md) with a design sketch and
+revisit trigger.  None block the invite-only beta launch.
 
 ### B-G2 — Product image CDN invalidation on delete
 - **Contract**: Deleting a product invalidates its CDN entries.
-- **Deferred to**: Phase 13.  The deletion flow marks the DB row but does
-  not issue a CloudFront / Fastly purge.  The lifecycle policy on the S3
-  bucket will eventually clean orphaned keys; operational acceptable for
-  the invite-only beta.
+- **Current**: DB row is marked deleted; no CloudFront / Fastly purge.
+- **Why safe for v1**: S3 lifecycle policy expires orphaned keys on a
+  7-day window; image keys are product-versioned so stale cache hits
+  can't leak to a different product.
+- **Tracked**: POST-V1-BACKLOG.md § B-G2.
 
 ### B-G3 — Avatar cropping pipeline
 - **Contract**: Server-side crop to square + thumbnail.
-- **Deferred to**: Phase 13.  Client already validates dimensions; the
-  server pipeline isn't a security-critical feature for the beta.
+- **Current**: Client validates dimensions and crops before upload.
+- **Why safe for v1**: not security-critical; acceptable thumbnail
+  quality from the client crop.
+- **Tracked**: POST-V1-BACKLOG.md § B-G3.
 
 ### C-G5 — WebSocket reconnection back-off guidance
-- **Contract**: Recommends client exponential back-off up to 60s.
-- **Deferred to**: client implementation doc.  Backend behaviour is correct
-  (connection cap + 429 on reconnect flood); the back-off is a client
-  recommendation, not an API surface.
+- **Contract**: Client SHOULD exponential back-off reconnects up to 60s.
+- **Current**: backend enforces connection cap + 429 on flood; client
+  retries every 3 s.
+- **Why safe for v1**: server-side guardrails are in place; back-off is
+  a client recommendation, not an API surface.
+- **Tracked**: POST-V1-BACKLOG.md § C-G5.
 
-### C-G6 — Per-conversation message retention override via UI
+### C-G6 — Per-conversation message retention override
 - **Contract**: Admin endpoint to override retention for a single
   conversation.
-- **Deferred to**: Phase 13.  Current global `message_retention_days`
-  setting is sufficient for the moderation cases we've seen so far.
+- **Current**: global `message_retention_days` setting only.
+- **Why safe for v1**: no moderation request has surfaced in the beta
+  cohort; will build when first legal/DMCA case requires it.
+- **Tracked**: POST-V1-BACKLOG.md § C-G6.
 
-### C-G7 — Push notifications integrated with message send
-- **Contract**: `message.new` triggers a push.
-- **Status**: 🟡 Scaffolded.  `push_service.send_notification()` exists
-  and `POST /devices/register` persists tokens, but the messaging service
-  does not yet dispatch pushes on every send (deferred to Phase 13 so the
-  rollout can be gated on real FCM/APNs creds).
+### C-G7 — Push notifications on message send 🟡
+- **Contract**: `message.new` triggers FCM/APNs push.
+- **Current**: `push_service.send_notification()` + `POST /devices/register`
+  scaffolded; messaging service does not dispatch pushes on every send.
+- **Why safe for v1**: gated on real FCM/APNs creds which land with the
+  mobile-release pipeline.
+- **Tracked**: POST-V1-BACKLOG.md § C-G7.
 
 ### C-G8 / C-G9 — Read receipts + typing indicators
-- **Contract**: Documented in api-contract but not yet wired.
-- **Deferred to**: Phase 13.  Requires extra WS message types and client
-  UI; low signal in the beta cohort.
+- **Contract**: WS message types documented in api-contract.
+- **Current**: not wired.
+- **Why safe for v1**: low signal in the beta cohort.
+- **Tracked**: POST-V1-BACKLOG.md § C-G8 / C-G9.

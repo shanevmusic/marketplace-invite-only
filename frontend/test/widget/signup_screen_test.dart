@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:marketplace/app/theme/app_theme.dart';
-import 'package:marketplace/features/auth/data/auth_repository.dart';
 import 'package:marketplace/features/auth/screens/signup_screen.dart';
 import 'package:marketplace/features/auth/state/auth_controller.dart';
 

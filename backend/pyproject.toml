@@ -17,6 +17,7 @@ dependencies = [
     # Validation / settings
     "pydantic>=2.8",
     "pydantic-settings",
+    "email-validator",
     # Database (async)
     "sqlalchemy[asyncio]>=2.0.32",
     "asyncpg",

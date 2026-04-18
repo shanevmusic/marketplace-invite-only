@@ -4,9 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:marketplace/app/theme/app_theme.dart';
-import 'package:marketplace/features/auth/data/auth_api.dart';
 import 'package:marketplace/features/auth/data/auth_dtos.dart';
-import 'package:marketplace/features/auth/data/auth_repository.dart';
 import 'package:marketplace/features/auth/screens/login_screen.dart';
 import 'package:marketplace/features/auth/state/auth_controller.dart';
 

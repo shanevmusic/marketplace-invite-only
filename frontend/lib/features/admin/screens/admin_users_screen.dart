@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/theme_extensions.dart';
 import '../../../app/theme/tokens.dart';
@@ -11,7 +10,6 @@ import '../../../shared/widgets/app_input.dart';
 import '../../../shared/widgets/app_list_tile.dart';
 import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/role_badge.dart';
-import '../data/admin_dtos.dart';
 import '../state/admin_controllers.dart';
 
 class AdminUsersScreen extends ConsumerStatefulWidget {

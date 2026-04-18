@@ -120,6 +120,27 @@ metadata (timestamps, sender, conversation).
 | APNs / FCM 403                | Push fanout log warn             | Rotate per `SECRET-ROTATION.md`     |
 | Stale migration at task start | `alembic` one-shot fails in CI   | Deploy blocked before service swap  |
 
+## 6a. Production Topology
+
+This doc is the hub — everything below is authoritative elsewhere, and
+this section exists so new engineers can find each piece in one hop.
+
+| Concern                | Authoritative source                                                                             |
+|------------------------|--------------------------------------------------------------------------------------------------|
+| IaC stack (ECS + ALB + RDS wiring) | [`infra/terraform/aws/README.md`](../infra/terraform/aws/README.md)                   |
+| Ops dashboard (ALB / ECS widgets)  | `infra/terraform/aws/dashboard.tf` — `aws_cloudwatch_dashboard.ops`                   |
+| Alternate deploy target (Cloud Run) | [`infra/gcp/README.md`](../infra/gcp/README.md)                                       |
+| CI/CD workflows        | `.github/workflows/{test,deploy-main,security,mobile-release}.yml`                               |
+| Runbook index          | [`runbooks/README.md`](runbooks/README.md)                                                       |
+| ADR index              | [`adr/README.md`](adr/README.md)                                                                 |
+| Contract deviations    | [`CONTRACT-DEVIATIONS.md`](CONTRACT-DEVIATIONS.md) (resolved vs. tracked-to-v1.1)                |
+| Post-v1 backlog        | [`POST-V1-BACKLOG.md`](POST-V1-BACKLOG.md) (Redis fan-out, CDN invalidation, …)                  |
+| Production readiness   | [`PRODUCTION-READINESS.md`](PRODUCTION-READINESS.md)                                             |
+
+Recommended reading order for a new on-call:
+`README.md` → this doc → `runbooks/DEPLOYMENT.md` → `runbooks/OBSERVABILITY.md` →
+`runbooks/INCIDENT-RESPONSE.md`.
+
 ## 7. What is intentionally *not* here
 
 - No Redis / queue.  Rate limiting is in-process (slowapi), background
