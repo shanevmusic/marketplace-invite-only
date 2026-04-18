@@ -13,6 +13,18 @@ task per request, which must share the same loop as the engine).
 
 from __future__ import annotations
 
+# -- Must run before any ``app.*`` import so the engine binds to the test DB --
+import os as _os
+
+TEST_DB_URL = (
+    "postgresql+asyncpg://marketplace:marketplace@localhost:5432/marketplace_test"
+)
+TEST_DB_SYNC_URL = (
+    "postgresql://marketplace:marketplace@localhost:5432/marketplace_test"
+)
+_os.environ.setdefault("APP_DATABASE_URL", TEST_DB_URL)
+_os.environ.setdefault("APP_DATABASE_URL_SYNC", TEST_DB_SYNC_URL)
+
 import subprocess
 import uuid
 from collections.abc import AsyncGenerator
@@ -34,21 +46,25 @@ from app.core.security import hash_password
 from app.main import app
 from app.models.user import User
 
-# ---------------------------------------------------------------------------
-# Test DB URLs
-# ---------------------------------------------------------------------------
-
-TEST_DB_URL = (
-    "postgresql+asyncpg://marketplace:marketplace@localhost:5432/marketplace_test"
-)
-TEST_DB_SYNC_URL = (
-    "postgresql://marketplace:marketplace@localhost:5432/marketplace_test"
-)
-
 
 # ---------------------------------------------------------------------------
 # Session-scoped sync: create test DB and run migrations
 # ---------------------------------------------------------------------------
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _disable_rate_limiter() -> Any:
+    """Disable the SlowAPI limiter for the test session.
+
+    Phase 6 adds many more HTTP calls per session; the 10/minute login
+    limit now gets exceeded.  Individual tests re-enable it locally via
+    ``monkeypatch.setattr(rate_limiter.limiter, "enabled", True)``.
+    """
+    from app.core import rate_limiter
+
+    rate_limiter.limiter.enabled = False
+    yield
+    rate_limiter.limiter.enabled = True
 
 
 @pytest.fixture(scope="session", autouse=True)

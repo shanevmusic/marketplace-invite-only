@@ -54,6 +54,16 @@ class PlatformSettings(Base):
             "(ADR-0012 D4)."
         ),
     )
+    message_retention_days: Mapped[int] = mapped_column(
+        sa.Integer,
+        nullable=False,
+        default=90,
+        server_default=sa.text("90"),
+        comment=(
+            "Minimum days to retain messages before admin purge (ADR-0013). "
+            "CHECK message_retention_days >= 7."
+        ),
+    )
     currency_code: Mapped[str] = mapped_column(
         sa.String(3),
         nullable=False,
@@ -82,6 +92,10 @@ class PlatformSettings(Base):
         sa.CheckConstraint(
             "order_auto_complete_grace_hours >= 1",
             name="ck_platform_settings_auto_complete_grace_positive",
+        ),
+        sa.CheckConstraint(
+            "message_retention_days >= 7",
+            name="ck_platform_settings_message_retention_min",
         ),
     )
 

@@ -78,6 +78,19 @@ class Message(UUIDPKMixin, Base):
         nullable=False,
         comment="Sender's ephemeral X25519 public key (32 bytes).",
     )
+    recipient_key_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        sa.ForeignKey(
+            "user_public_keys.id",
+            name="fk_messages_recipient_key_id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+        comment=(
+            "Recipient user_public_keys.id the sender encrypted against. "
+            "Lets the recipient pick the correct private key after rotation."
+        ),
+    )
     ratchet_state: Mapped[Optional[dict]] = mapped_column(
         JSONB,
         nullable=True,

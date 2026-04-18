@@ -392,3 +392,53 @@ class RetentionSettingInvalid(ValidationError):
 
     def __init__(self, message: str = "retention_min_days must be >= 1.") -> None:
         super().__init__(message)
+
+
+# ---------------------------------------------------------------------------
+# Messaging domain exceptions (Phase 6)
+# ---------------------------------------------------------------------------
+
+
+class PublicKeyNotFound(NotFoundError):
+    """No active public key for user, or visibility-hidden."""
+
+    code = "PUBLIC_KEY_NOT_FOUND"
+
+    def __init__(self, message: str = "Public key not found.") -> None:
+        super().__init__(message)
+
+
+class KeyOwnershipError(NotFoundError):
+    """Key not owned by caller (render as 404 to avoid leaking existence)."""
+
+    code = "NOT_FOUND"
+
+    def __init__(self, message: str = "Key not found.") -> None:
+        super().__init__(message)
+
+
+class ConversationNotFound(NotFoundError):
+    """Conversation not found or caller is not a participant."""
+
+    code = "CONVERSATION_NOT_FOUND"
+
+    def __init__(self, message: str = "Conversation not found.") -> None:
+        super().__init__(message)
+
+
+class ConversationIneligible(NotFoundError):
+    """Pair is not eligible to message — rendered 404 to avoid user enumeration."""
+
+    code = "CONVERSATION_NOT_FOUND"
+
+    def __init__(self, message: str = "Conversation not found.") -> None:
+        super().__init__(message)
+
+
+class MessageRetentionInvalid(ValidationError):
+    """Invalid message_retention_days (must be >= 7)."""
+
+    code = "MESSAGE_RETENTION_INVALID"
+
+    def __init__(self, message: str = "message_retention_days must be >= 7.") -> None:
+        super().__init__(message)

@@ -91,10 +91,9 @@ class User(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
         back_populates="issuer",
         foreign_keys="InviteLink.issuer_id",
     )
-    public_key: Mapped[Optional["UserPublicKey"]] = relationship(  # type: ignore[name-defined]  # noqa: F821
+    public_key: Mapped[list["UserPublicKey"]] = relationship(  # type: ignore[name-defined]  # noqa: F821
         "UserPublicKey",
         back_populates="user",
-        uselist=False,
         cascade="all, delete-orphan",
     )
     seller_profile: Mapped[Optional["Seller"]] = relationship(  # type: ignore[name-defined]  # noqa: F821

@@ -19,7 +19,7 @@ import logging
 import uuid
 from typing import Any
 
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, WebSocket
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -27,9 +27,12 @@ from slowapi import _rate_limit_exceeded_handler  # type: ignore[attr-defined]
 from slowapi.errors import RateLimitExceeded
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from app.api.v1.admin_messages import router as admin_messages_router
 from app.api.v1.admin_orders import router as admin_orders_router
 from app.api.v1.auth import router as auth_router
+from app.api.v1.conversations import router as conversations_router
 from app.api.v1.invites import router as invites_router
+from app.api.v1.keys import router as keys_router
 from app.api.v1.orders import router as orders_router
 from app.api.v1.products import router as products_router
 from app.api.v1.sellers import router as sellers_router
@@ -37,6 +40,7 @@ from app.api.v1.stores import router as stores_router
 from app.core.exceptions import AppException
 from app.core.rate_limiter import limiter
 from app.core.scheduler import start_purge_scheduler, stop_purge_scheduler
+from app.ws.gateway import handle_ws
 
 # ---------------------------------------------------------------------------
 # Logging — structured JSON via stdlib (no SQL echo in production)
@@ -141,14 +145,37 @@ def create_app() -> FastAPI:
     async def validation_exception_handler(
         request: Request, exc: RequestValidationError
     ) -> JSONResponse:
-        """Wrap Pydantic 422 errors in the error envelope."""
+        """Wrap Pydantic 422 errors in the error envelope.
+
+        Pydantic v2 sometimes includes raw exception objects in ``ctx.error``
+        when a ``field_validator`` raises ``ValueError``.  Strip those out
+        so the response stays JSON-serializable.
+        """
+        def _sanitize(err: dict) -> dict:
+            clean = {}
+            for k, v in err.items():
+                if k == "ctx" and isinstance(v, dict):
+                    clean_ctx = {}
+                    for ck, cv in v.items():
+                        if isinstance(cv, Exception):
+                            clean_ctx[ck] = str(cv)
+                        else:
+                            clean_ctx[ck] = cv
+                    clean[k] = clean_ctx
+                elif isinstance(v, Exception):
+                    clean[k] = str(v)
+                else:
+                    clean[k] = v
+            return clean
+
+        details = [_sanitize(err) for err in exc.errors()]
         return JSONResponse(
             status_code=422,
             content={
                 "error": {
                     "code": "VALIDATION_FAILED",
                     "message": "Request validation failed.",
-                    "detail": exc.errors(),
+                    "detail": details,
                 }
             },
         )
@@ -200,6 +227,16 @@ def create_app() -> FastAPI:
     application.include_router(products_router, prefix="/api/v1")
     application.include_router(orders_router, prefix="/api/v1")
     application.include_router(admin_orders_router, prefix="/api/v1")
+    application.include_router(keys_router, prefix="/api/v1")
+    application.include_router(conversations_router, prefix="/api/v1")
+    application.include_router(admin_messages_router, prefix="/api/v1")
+
+    # -----------------------------------------------------------------------
+    # WebSocket endpoint
+    # -----------------------------------------------------------------------
+    @application.websocket("/ws")
+    async def websocket_endpoint(websocket: WebSocket) -> None:  # noqa: WPS430
+        await handle_ws(websocket)
 
     return application
 
