@@ -19,6 +19,10 @@ This directory is the **design source of truth** for the Flutter app. Everything
 | [04-navigation-map.md](./04-navigation-map.md) | Full route tree (go_router), deep-link schemes, invite-link flow, redirect rules, guarded routes. |
 | [05-auth-flows.md](./05-auth-flows.md) | Phase 8 auth journeys: first-time invite, returning cold start, login failure, invite errors, signup with/without role_choice, logout, offline, transparent token refresh. |
 | [06-accessibility-i18n.md](./06-accessibility-i18n.md) | AA contrast, Dynamic Type, touch targets, semantic labels, keyboard support, motion reduction; intl/ARB scaffold for future locales. |
+| [phase-9-seller-flows.md](./phase-9-seller-flows.md) | **Phase 9.** Seller screens: store setup, product CRUD, order inbox + state-machine actions, dashboard. Backend-gap table (product image upload URL, reviews) at top. |
+| [phase-9-customer-flows.md](./phase-9-customer-flows.md) | **Phase 9.** Customer screens: referral-scoped discover (ADR-0007 empty state), product detail, cart, checkout, orders list + detail (ADR-0014 coordinate-free delivery widget). |
+| [phase-9-navigation-additions.md](./phase-9-navigation-additions.md) | **Phase 9.** New go_router routes slotted into the Phase 8 shell tree. Tab ordering confirmed, cart route placement, path constants. |
+| [phase-9-components-diff.md](./phase-9-components-diff.md) | **Phase 9.** New components (`QuantityStepper`, `OrderStatusTimeline`, `OrderStateActionButton`, `CartLineItem`, `ImagePicker`, `ProductTile`, etc.) and the mandatory `formatMoney()` helper. |
 
 ---
 
