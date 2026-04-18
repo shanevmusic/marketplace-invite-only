@@ -147,7 +147,7 @@ README.md      quick-start (added in Phase 13)
 Progress tracker. Each phase ends when its stop condition is met and the Orchestrator signs off.
 
 - [x] **Phase 0** — Kickoff & Orchestrator setup — conventions approved
-- [ ] **Phase 1** — System architecture & PRD
+- [x] **Phase 1** — System architecture & PRD — frozen
 - [ ] **Phase 2** — Database schema + migrations
 - [ ] **Phase 3** — Backend A: auth + invite system
 - [ ] **Phase 4** — Backend B: sellers, stores, products
@@ -169,7 +169,7 @@ Progress tracker. Each phase ends when its stop condition is met and the Orchest
 | # | Decision | Resolve by |
 |---|---|---|
 | D1 | AWS vs GCP primary target | Phase 13 (scaffold both; pick primary then) |
-| D2 | E2E scheme: simple X25519+AES-GCM vs Signal double-ratchet | Phase 6 (ADR required) |
+| ~~D2~~ | ~~E2E scheme~~ | **Closed — ADR-0009: X25519 + AES-256-GCM** |
 | D3 | Admin surface: Flutter admin tab vs lightweight web client | Phase 11 |
 | D4 | Map provider (Mapbox vs Google Maps) for tracking UI | Phase 10 |
 | D5 | Push notifications provider (FCM + APNs direct, or OneSignal) | Phase 9 |
@@ -189,3 +189,4 @@ A phase is done when:
 ## 9. Phase Log
 
 - **Phase 0** — Orchestrator (2026-04-17): stack + product logic frozen, agent roster defined, conventions established, monorepo scaffolded, PROJECT.md created. **Ready for Phase 1.**
+- **Phase 1** — System Architect + Product Manager (2026-04-18): delivered `architecture.md`, `api-contract.md`, `er-diagram.md`, `prd.md` (28 P0 features). Orchestrator reconciliation in `phase-1-reconciliation.md` resolved all 15 architect/contract/ER open questions + 4 PM open questions. ADRs 0002–0009 recorded. **D2 closed.** **Ready for Phase 2.**
