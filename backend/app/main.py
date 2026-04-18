@@ -29,6 +29,9 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.api.v1.auth import router as auth_router
 from app.api.v1.invites import router as invites_router
+from app.api.v1.products import router as products_router
+from app.api.v1.sellers import router as sellers_router
+from app.api.v1.stores import router as stores_router
 from app.core.exceptions import AppException
 from app.core.rate_limiter import limiter
 
@@ -177,6 +180,9 @@ def create_app() -> FastAPI:
     # -----------------------------------------------------------------------
     application.include_router(auth_router, prefix="/api/v1")
     application.include_router(invites_router, prefix="/api/v1")
+    application.include_router(sellers_router, prefix="/api/v1")
+    application.include_router(stores_router, prefix="/api/v1")
+    application.include_router(products_router, prefix="/api/v1")
 
     return application
 

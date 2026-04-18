@@ -71,13 +71,15 @@ def setup_test_db() -> Any:
     conn.close()
 
     import os
+    from pathlib import Path
 
     env = os.environ.copy()
     env["APP_DATABASE_URL"] = TEST_DB_URL
     env["APP_DATABASE_URL_SYNC"] = TEST_DB_SYNC_URL
+    backend_dir = Path(__file__).resolve().parent.parent
     subprocess.run(
         ["python", "-m", "alembic", "upgrade", "head"],
-        cwd="/home/user/workspace/marketplace/backend",
+        cwd=str(backend_dir),
         env=env,
         check=True,
         capture_output=True,
@@ -236,6 +238,97 @@ async def create_admin_invite(
     db.add(invite)
     await db.flush()
     return plaintext
+
+
+async def seed_customer(
+    db: AsyncSession,
+    email: str = "customer_test@example.com",
+    *,
+    referring_seller_id: uuid.UUID | None = None,
+) -> User:
+    """Create a customer user (optionally linked to a referring seller)."""
+    user = User(
+        id=uuid.uuid4(),
+        email=email,
+        password_hash=hash_password("CustomerPass123!"),
+        role="customer",
+        display_name="Test Customer",
+        phone=None,
+        is_active=True,
+        referring_seller_id=referring_seller_id,
+    )
+    db.add(user)
+    await db.flush()
+    return user
+
+
+async def seed_driver(
+    db: AsyncSession,
+    email: str = "driver_test@example.com",
+) -> User:
+    """Create a driver user."""
+    user = User(
+        id=uuid.uuid4(),
+        email=email,
+        password_hash=hash_password("DriverPass123!"),
+        role="driver",
+        display_name="Test Driver",
+        phone=None,
+        is_active=True,
+    )
+    db.add(user)
+    await db.flush()
+    return user
+
+
+async def seed_store_for_seller(
+    db: AsyncSession,
+    seller_user: User,
+    *,
+    name: str = "Test Store",
+    slug: str | None = None,
+) -> Any:
+    """Create a Store row directly for a seller user."""
+    from app.models.store import Store
+
+    store = Store(
+        id=uuid.uuid4(),
+        seller_id=seller_user.id,
+        name=name,
+        slug=slug or f"store-{uuid.uuid4().hex[:8]}",
+        description="",
+        is_active=True,
+    )
+    db.add(store)
+    await db.flush()
+    return store
+
+
+async def seed_product(
+    db: AsyncSession,
+    seller_user: User,
+    store: Any,
+    *,
+    name: str = "Test Product",
+    price_minor: int = 1000,
+    stock_quantity: int | None = 10,
+) -> Any:
+    """Create a Product row directly."""
+    from app.models.product import Product
+
+    product = Product(
+        id=uuid.uuid4(),
+        seller_id=seller_user.id,
+        store_id=store.id,
+        name=name,
+        description="",
+        price_minor=price_minor,
+        stock_quantity=stock_quantity,
+        is_active=True,
+    )
+    db.add(product)
+    await db.flush()
+    return product
 
 
 async def create_seller_referral(

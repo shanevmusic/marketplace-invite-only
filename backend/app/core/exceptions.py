@@ -200,3 +200,88 @@ class EmailTaken(ConflictError):
 
     def __init__(self, message: str = "Email address is already registered.") -> None:
         super().__init__(message)
+
+
+# ---------------------------------------------------------------------------
+# Seller / Store / Product domain exceptions (Phase 4)
+# ---------------------------------------------------------------------------
+
+
+class SellerProfileMissing(AppException):
+    """User does not have a seller profile row."""
+
+    http_status = 400
+    code = "SELLER_PROFILE_MISSING"
+
+    def __init__(
+        self, message: str = "User does not have a seller profile."
+    ) -> None:
+        super().__init__(message)
+
+
+class StoreAlreadyExists(ConflictError):
+    """Seller already has a store (one-store-per-seller)."""
+
+    code = "STORE_ALREADY_EXISTS"
+
+    def __init__(self, message: str = "Seller already has a store.") -> None:
+        super().__init__(message)
+
+
+class StoreCityRequired(ValidationError):
+    """City is required when creating a store."""
+
+    code = "STORE_CITY_REQUIRED"
+
+    def __init__(self, message: str = "City is required to create a store.") -> None:
+        super().__init__(message)
+
+
+class StoreNotFound(NotFoundError):
+    """Store not found or visibility-hidden."""
+
+    code = "STORE_NOT_FOUND"
+
+    def __init__(self, message: str = "Store not found.") -> None:
+        super().__init__(message)
+
+
+class ProductNotFound(NotFoundError):
+    """Product not found, deleted, or visibility-hidden."""
+
+    code = "PRODUCT_NOT_FOUND"
+
+    def __init__(self, message: str = "Product not found.") -> None:
+        super().__init__(message)
+
+
+class ProductOwnershipError(AuthorizationError):
+    """Seller tried to mutate a product they don't own."""
+
+    code = "PRODUCT_NOT_OWNED"
+
+    def __init__(
+        self, message: str = "You do not own this product."
+    ) -> None:
+        super().__init__(message)
+
+
+class VisibilityDenied(NotFoundError):
+    """Caller fails referral visibility scoping.
+
+    Rendered as 404 to avoid leaking resource existence (see ADR-0007).
+    """
+
+    code = "NOT_FOUND"
+
+    def __init__(self, message: str = "Resource not found.") -> None:
+        super().__init__(message)
+
+
+class SellerNotFound(NotFoundError):
+    """Seller not found."""
+
+    code = "SELLER_NOT_FOUND"
+
+    def __init__(self, message: str = "Seller not found.") -> None:
+        super().__init__(message)
