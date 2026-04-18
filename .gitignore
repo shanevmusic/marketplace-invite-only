@@ -23,6 +23,16 @@ ios/.symlinks/
 android/.gradle/
 android/local.properties
 *.iml
+# Flutter-generated (frontend/)
+frontend/android/local.properties
+frontend/android/app/src/main/java/io/flutter/plugins/
+frontend/ios/Flutter/Generated.xcconfig
+frontend/ios/Flutter/flutter_export_environment.sh
+frontend/ios/Flutter/ephemeral/
+frontend/ios/Runner/GeneratedPluginRegistrant.h
+frontend/ios/Runner/GeneratedPluginRegistrant.m
+frontend/.dart_tool/
+frontend/build/
 
 # Node (if any tooling is added)
 node_modules/
