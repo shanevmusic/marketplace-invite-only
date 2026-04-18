@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.env
+.env.*
+!.env.example
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+ios/Pods/
+ios/.symlinks/
+android/.gradle/
+android/local.properties
+*.iml
+
+# Node (if any tooling is added)
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Infra / secrets
+*.pem
+*.key
+terraform.tfstate*
+.terraform/
+
+# Logs
+*.log
