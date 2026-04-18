@@ -17,15 +17,20 @@ Seed users (password for all: ``DevPass123!``):
   - driver@example.com / role=driver
 
 Also creates:
-  - A seller_referral invite_link for the seller (token="SEEDTOKEN0001")
+  - A seller_referral invite_link for the seller (token generated via
+    secrets.token_urlsafe(32) and printed at the end of seed output)
   - A referral row linking seller → customer
   - Platform settings singleton (idempotent via ON CONFLICT).
+
+Security note: the seller_referral token is generated randomly on first run
+and printed once.  It is NOT a hardcoded constant; do not hardcode it.
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
+import secrets
 import sys
 import uuid
 from datetime import UTC, datetime
@@ -155,12 +160,15 @@ async def _seed(session: AsyncSession) -> None:
     # ------------------------------------------------------------------ #
     from app.models.invite_link import InviteLink
 
+    # Security: generate a random token — never hardcode invite tokens.
+    seller_referral_token = secrets.token_urlsafe(32)
+
     invite_id = uuid.uuid4()
     invite = InviteLink(
         id=invite_id,
         issuer_id=seller_user_id,
         type="seller_referral",
-        token="SEEDTOKEN00001234567890ABCDEF01",  # 32-char deterministic dev token
+        token=seller_referral_token,
         role_target=None,
         max_uses=None,
         used_count=1,  # will be used by customer below
@@ -246,6 +254,7 @@ async def _seed(session: AsyncSession) -> None:
     print("=" * 72)
     print(f"\nStore   : {store.name!r} (slug={store.slug!r})")
     print(f"Products: {len(product_ids)} seeded")
+    print(f"Seller referral token: {seller_referral_token}")
     print()
 
 

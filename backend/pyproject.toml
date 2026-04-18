@@ -77,4 +77,6 @@ plugins = ["pydantic.mypy"]
 # ---------------------------------------------------------------------------
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
+markers = ["ratelimit: marks tests that test rate limiting (deselect with -m 'not ratelimit')"]
