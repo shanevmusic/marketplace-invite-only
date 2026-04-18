@@ -44,6 +44,16 @@ class PlatformSettings(Base):
         server_default=sa.text("30"),
         comment="Minimum days after delivery before an order may be hard-deleted.",
     )
+    order_auto_complete_grace_hours: Mapped[int] = mapped_column(
+        sa.Integer,
+        nullable=False,
+        default=72,
+        server_default=sa.text("72"),
+        comment=(
+            "Hours after delivery before a delivered order auto-completes "
+            "(ADR-0012 D4)."
+        ),
+    )
     currency_code: Mapped[str] = mapped_column(
         sa.String(3),
         nullable=False,
@@ -69,6 +79,10 @@ class PlatformSettings(Base):
 
     __table_args__ = (
         sa.CheckConstraint("id = 1", name="ck_platform_settings_singleton"),
+        sa.CheckConstraint(
+            "order_auto_complete_grace_hours >= 1",
+            name="ck_platform_settings_auto_complete_grace_positive",
+        ),
     )
 
     def __repr__(self) -> str:

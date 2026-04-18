@@ -87,6 +87,7 @@ class OrderAnalyticsSnapshot(UUIDPKMixin, Base):
     __table_args__ = (
         sa.Index("ix_order_analytics_snapshots_seller_id_delivered_at", "seller_id", "delivered_at"),
         sa.Index("ix_order_analytics_snapshots_delivered_at", "delivered_at"),
+        sa.UniqueConstraint("order_id", name="uq_order_analytics_snapshots_order_id"),
     )
 
     def __repr__(self) -> str:

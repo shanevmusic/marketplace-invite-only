@@ -27,13 +27,16 @@ from slowapi import _rate_limit_exceeded_handler  # type: ignore[attr-defined]
 from slowapi.errors import RateLimitExceeded
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from app.api.v1.admin_orders import router as admin_orders_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.invites import router as invites_router
+from app.api.v1.orders import router as orders_router
 from app.api.v1.products import router as products_router
 from app.api.v1.sellers import router as sellers_router
 from app.api.v1.stores import router as stores_router
 from app.core.exceptions import AppException
 from app.core.rate_limiter import limiter
+from app.core.scheduler import start_purge_scheduler, stop_purge_scheduler
 
 # ---------------------------------------------------------------------------
 # Logging — structured JSON via stdlib (no SQL echo in production)
@@ -168,6 +171,18 @@ def create_app() -> FastAPI:
         )
 
     # -----------------------------------------------------------------------
+    # Lifespan: start purge scheduler (opt-in via APP_ENABLE_SCHEDULER)
+    # -----------------------------------------------------------------------
+
+    @application.on_event("startup")
+    async def _startup() -> None:
+        start_purge_scheduler()
+
+    @application.on_event("shutdown")
+    async def _shutdown() -> None:
+        await stop_purge_scheduler()
+
+    # -----------------------------------------------------------------------
     # Health endpoint
     # -----------------------------------------------------------------------
 
@@ -183,6 +198,8 @@ def create_app() -> FastAPI:
     application.include_router(sellers_router, prefix="/api/v1")
     application.include_router(stores_router, prefix="/api/v1")
     application.include_router(products_router, prefix="/api/v1")
+    application.include_router(orders_router, prefix="/api/v1")
+    application.include_router(admin_orders_router, prefix="/api/v1")
 
     return application
 

@@ -285,3 +285,110 @@ class SellerNotFound(NotFoundError):
 
     def __init__(self, message: str = "Seller not found.") -> None:
         super().__init__(message)
+
+
+# ---------------------------------------------------------------------------
+# Order / fulfillment / retention domain exceptions (Phase 5)
+# ---------------------------------------------------------------------------
+
+
+class OrderNotFound(NotFoundError):
+    """Order not found or visibility-hidden."""
+
+    code = "ORDER_NOT_FOUND"
+
+    def __init__(self, message: str = "Order not found.") -> None:
+        super().__init__(message)
+
+
+class OrderInvalidTransition(ConflictError):
+    """Attempted state transition is not permitted."""
+
+    code = "ORDER_INVALID_TRANSITION"
+
+    def __init__(self, message: str = "Invalid order state transition.") -> None:
+        super().__init__(message)
+
+
+class OrderRetentionNotMet(ConflictError):
+    """Hard-delete attempted before retention window elapsed."""
+
+    code = "ORDER_RETENTION_NOT_MET"
+
+    def __init__(
+        self,
+        message: str = "Order cannot be deleted before the retention period elapses.",
+    ) -> None:
+        super().__init__(message)
+
+
+class DeliveryAlreadyStarted(ConflictError):
+    """``out_for_delivery`` triggered twice."""
+
+    code = "DELIVERY_ALREADY_STARTED"
+
+    def __init__(self, message: str = "Delivery already started.") -> None:
+        super().__init__(message)
+
+
+class ProductOutOfStock(ConflictError):
+    """Insufficient stock to satisfy a line item."""
+
+    code = "PRODUCT_OUT_OF_STOCK"
+
+    def __init__(self, message: str = "Product is out of stock.") -> None:
+        super().__init__(message)
+
+
+class ProductNotVisible(NotFoundError):
+    """Customer placing an order referenced a product they can't see."""
+
+    code = "PRODUCT_NOT_VISIBLE"
+
+    def __init__(self, message: str = "Product is not available to you.") -> None:
+        super().__init__(message)
+
+
+class DriverNotRequested(ConflictError):
+    """Admin tried to assign a driver to an order with no request row."""
+
+    code = "DRIVER_NOT_REQUESTED"
+
+    def __init__(
+        self,
+        message: str = "Seller has not requested a driver for this order.",
+    ) -> None:
+        super().__init__(message)
+
+
+class DriverAlreadyAssigned(ConflictError):
+    """Admin tried to assign a driver when one is already assigned."""
+
+    code = "DRIVER_ALREADY_ASSIGNED"
+
+    def __init__(
+        self,
+        message: str = "A driver has already been assigned to this order.",
+    ) -> None:
+        super().__init__(message)
+
+
+class FulfillmentAlreadyChosen(ConflictError):
+    """Seller tried to set fulfillment mode after one was already chosen."""
+
+    code = "FULFILLMENT_ALREADY_CHOSEN"
+
+    def __init__(
+        self,
+        message: str = "Fulfillment mode already chosen for this order.",
+    ) -> None:
+        super().__init__(message)
+
+
+class RetentionSettingInvalid(ValidationError):
+    """Invalid value for retention_min_days."""
+
+    code = "RETENTION_SETTING_INVALID"
+
+    def __init__(self, message: str = "retention_min_days must be >= 1.") -> None:
+        super().__init__(message)
