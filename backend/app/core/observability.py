@@ -9,11 +9,10 @@ services) import them and increment without re-declaring.
 Kept deliberately lightweight — no global side effects at import time.
 """
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
+from fastapi import Request, Response
 from prometheus_client import Counter, Gauge
 
 if TYPE_CHECKING:
@@ -47,7 +46,7 @@ orders_placed_total = Counter(
 # ---------------------------------------------------------------------------
 
 
-def init_sentry(dsn: str, environment: str, release: str | None = None) -> None:
+def init_sentry(dsn: str, environment: str, release: Optional[str] = None) -> None:
     """Initialize Sentry if a DSN is configured.
 
     Called once at application startup.  Safe to call with an empty DSN
@@ -101,17 +100,15 @@ def init_prometheus(app: "FastAPI") -> None:
     )
     instrumentator.instrument(app)
 
-    from fastapi import Request, Response
-    from app.core.config import settings
+    from app.core.config import settings as _settings
+    from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
     @app.get("/metrics", include_in_schema=False)
-    async def metrics(request: Request) -> Response:
+    async def metrics_endpoint(request: Request) -> Response:
         token = request.headers.get("x-metrics-token", "")
-        expected = settings.metrics_token
+        expected = _settings.metrics_token
         if not expected or token != expected:
             return Response(status_code=404)
-        from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
-
         return Response(
             content=generate_latest(),
             media_type=CONTENT_TYPE_LATEST,
