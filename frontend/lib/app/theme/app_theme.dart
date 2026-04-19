@@ -7,12 +7,9 @@ import 'tokens.dart';
 class AppTheme {
   const AppTheme._();
 
-  static ThemeData light() => _build(
-        brightness: Brightness.light,
-        scheme: _lightScheme,
-        semantic: AppSemanticColors.light,
-        roleBadge: RoleBadgeColors.light,
-      );
+  // Dark-only burnt-amber palette. `light()` is retained as an alias to
+  // `dark()` so the app renders identically regardless of system setting.
+  static ThemeData light() => dark();
 
   static ThemeData dark() => _build(
         brightness: Brightness.dark,
@@ -22,7 +19,7 @@ class AppTheme {
       );
 
   static const ColorScheme _lightScheme = ColorScheme(
-    brightness: Brightness.light,
+    brightness: Brightness.dark,
     primary: AppColorsLight.primary,
     onPrimary: AppColorsLight.onPrimary,
     primaryContainer: AppColorsLight.primaryContainer,
@@ -191,7 +188,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: brightness,
       colorScheme: scheme,
-      scaffoldBackgroundColor: scheme.surface,
+      scaffoldBackgroundColor: AppColorsDark.background,
       textTheme: textTheme,
       extensions: <ThemeExtension<dynamic>>[semantic, roleBadge],
       visualDensity: VisualDensity.adaptivePlatformDensity,
