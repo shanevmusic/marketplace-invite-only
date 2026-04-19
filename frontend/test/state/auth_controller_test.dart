@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -80,6 +82,30 @@ void main() {
     final value = await c.read(authControllerProvider.future);
     expect(value, isNull);
     expect(c.read(sessionExpiredFlagProvider), isTrue);
+    verify(() => repo.logout()).called(1);
+  });
+
+  test(
+      'build falls back to unauth + clears storage when refresh hangs past timeout',
+      () async {
+    final session = sampleSession();
+    when(() => repo.seedFromStorage()).thenAnswer((_) async => session);
+    // refresh() never completes — simulates a slow / unreachable backend.
+    final never = Completer<AuthSession>();
+    when(() => repo.refresh()).thenAnswer((_) => never.future);
+    when(() => repo.logout()).thenAnswer((_) async {});
+
+    final c = makeContainer();
+
+    final value = await c
+        .read(authControllerProvider.future)
+        .timeout(bootRefreshTimeout + const Duration(seconds: 2));
+
+    expect(value, isNull);
+    expect(c.read(authControllerProvider).value, isNull);
+    expect(c.read(authControllerProvider).hasError, isFalse);
+    // logout() is the code path that clears both in-memory session and
+    // SecureAuthStorage (see AuthRepository.logout).
     verify(() => repo.logout()).called(1);
   });
 

@@ -17,6 +17,10 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 /// One-shot flag read by the login screen after a session-expired event.
 final sessionExpiredFlagProvider = StateProvider<bool>((_) => false);
 
+/// Timeout applied to the boot-time `refresh` call so the splash screen can
+/// never hang forever if the backend is slow, unreachable, or misbehaving.
+const bootRefreshTimeout = Duration(seconds: 3);
+
 class AuthController extends AsyncNotifier<AuthSession?> {
   @override
   Future<AuthSession?> build() async {
@@ -30,7 +34,8 @@ class AuthController extends AsyncNotifier<AuthSession?> {
     if (cached == null) return null;
     try {
       // Attempt a refresh to validate the token on boot (Flow 2).
-      return await repo.refresh();
+      // 3s timeout keeps the splash from hanging if backend is slow/unreachable.
+      return await repo.refresh().timeout(bootRefreshTimeout);
     } on AuthApiException catch (e) {
       if (e.isTokenExpired || e.isUnauthorized) {
         // Stale tokens — force to unauth.
@@ -40,6 +45,16 @@ class AuthController extends AsyncNotifier<AuthSession?> {
       }
       // Network errors: stay optimistically signed-in with cached tokens.
       return cached;
+    } catch (_) {
+      // Timeout or any other failure during boot refresh: clear in-memory
+      // session + secure storage so a corrupt token can't hang the next boot,
+      // and let the router fall through to /login.
+      try {
+        await repo.logout();
+      } catch (_) {
+        // Ignore logout failures — we're already on the fallback path.
+      }
+      return null;
     }
   }
 
