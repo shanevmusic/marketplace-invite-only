@@ -109,6 +109,28 @@ void main() {
     verify(() => repo.logout()).called(1);
   });
 
+  test('build falls back to unauth when seedFromStorage hangs past timeout',
+      () async {
+    // seedFromStorage() never completes — simulates flutter_secure_storage_web
+    // hanging inside a sandboxed iframe (IndexedDB/SubtleCrypto wedge).
+    final never = Completer<AuthSession?>();
+    when(() => repo.seedFromStorage()).thenAnswer((_) => never.future);
+
+    final c = makeContainer();
+
+    final value = await c
+        .read(authControllerProvider.future)
+        .timeout(bootRefreshTimeout + const Duration(seconds: 2));
+
+    expect(value, isNull);
+    expect(c.read(authControllerProvider).value, isNull);
+    expect(c.read(authControllerProvider).hasError, isFalse);
+    // No refresh should be attempted, and no logout call either —
+    // there's nothing in memory yet and storage may be broken.
+    verifyNever(() => repo.refresh());
+    verifyNever(() => repo.logout());
+  });
+
   test('login success updates state with new session', () async {
     final session = sampleSession();
     when(() => repo.login(any())).thenAnswer((_) async => session);
