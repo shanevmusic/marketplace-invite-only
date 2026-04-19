@@ -108,19 +108,26 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home/admin',
         builder: (_, __) => const AdminShell(),
-        routes: _basicSubRoutes,
+        routes: _adminSubRoutes,
       ),
     ],
     errorBuilder: (_, __) => const UnknownErrorScreen(),
   );
 });
 
-/// Catch-all child matcher so deep-link tab paths land on the shell.
-final List<RouteBase> _basicSubRoutes = [
-  GoRoute(
-    path: ':tab',
-    builder: (_, __) => const SizedBox.shrink(),
-  ),
+/// Admin subroutes — each tab path must build AdminShell so deep-link
+/// navigation (e.g. /home/admin/users) renders the shell, not a blank
+/// SizedBox. The shell reads matchedLocation to pick the active tab.
+///
+/// Before this fix, admin used the same `:tab → SizedBox.shrink()` pattern
+/// as driver (see `_driverSubRoutes`), which caused the AdminShell to never
+/// render on deep-link: go_router matched the more specific child builder,
+/// and `SizedBox.shrink()` produced a blank (browser-default white) page.
+final List<RouteBase> _adminSubRoutes = [
+  GoRoute(path: 'users', builder: (_, __) => const AdminShell()),
+  GoRoute(path: 'content', builder: (_, __) => const AdminShell()),
+  GoRoute(path: 'analytics', builder: (_, __) => const AdminShell()),
+  GoRoute(path: 'ops', builder: (_, __) => const AdminShell()),
 ];
 
 final List<RouteBase> _customerSubRoutes = [
