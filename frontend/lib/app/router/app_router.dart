@@ -269,9 +269,14 @@ class _ProductEditLoader extends ConsumerWidget {
   }
 }
 
-String? _redirect(Ref ref, GoRouterState state) {
-  final auth = ref.read(authControllerProvider);
-  final loc = state.matchedLocation;
+@visibleForTesting
+String? redirectForTest(ProviderContainer c, String loc) =>
+    _redirectAt(c.read(authControllerProvider), loc);
+
+String? _redirect(Ref ref, GoRouterState state) =>
+    _redirectAt(ref.read(authControllerProvider), state.matchedLocation);
+
+String? _redirectAt(AsyncValue<AuthSession?> auth, String loc) {
 
   if (auth.isLoading) {
     return loc == AppRoutes.splash ? null : AppRoutes.splash;
@@ -287,10 +292,13 @@ String? _redirect(Ref ref, GoRouterState state) {
   }
 
   final session = auth.value;
+  // Splash is an initial-state page, not a destination. Once auth has
+  // settled (isLoading == false) we must push away from it; leaving splash
+  // in `onPublic` strands unauthenticated users on the splash screen
+  // forever because the redirect would return null.
   final onPublic = loc == AppRoutes.login ||
       loc == AppRoutes.signup ||
       loc.startsWith('/invite/') ||
-      loc == AppRoutes.splash ||
       loc.startsWith('/error/');
 
   if (session == null) {
