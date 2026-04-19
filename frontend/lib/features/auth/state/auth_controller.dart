@@ -30,7 +30,14 @@ class AuthController extends AsyncNotifier<AuthSession?> {
       ref.read(sessionExpiredFlagProvider.notifier).state = true;
       state = const AsyncValue.data(null);
     });
-    final cached = await repo.seedFromStorage();
+    AuthSession? cached;
+    try {
+      cached = await repo.seedFromStorage().timeout(bootRefreshTimeout);
+    } catch (_) {
+      // Storage read hung or errored — treat as unauth. No logout call
+      // because nothing is in memory yet and secure-storage may be broken.
+      return null;
+    }
     if (cached == null) return null;
     try {
       // Attempt a refresh to validate the token on boot (Flow 2).
