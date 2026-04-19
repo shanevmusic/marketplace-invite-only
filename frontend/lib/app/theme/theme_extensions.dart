@@ -81,27 +81,19 @@ class RoleBadgeColors extends ThemeExtension<RoleBadgeColors> {
   final Color customerBg;
   final Color customerFg;
 
-  static const light = RoleBadgeColors(
-    adminBg: Color(0xFF410E0B),
-    adminFg: Color(0xFFFFFFFF),
-    sellerBg: Color(0xFFFBE6CC),
-    sellerFg: Color(0xFF3A2210),
-    driverBg: Color(0xFFC7E7DF),
-    driverFg: Color(0xFF00382E),
-    customerBg: Color(0xFFE2E1FF),
-    customerFg: Color(0xFF0E0B5C),
+  // Role badges — dark-only palette. `.light` aliases to `.dark` values.
+  static const dark = RoleBadgeColors(
+    adminBg: Color(0xFF2A0E0E),
+    adminFg: Color(0xFFFCA5A5),
+    sellerBg: Color(0xFF1F1608),
+    sellerFg: Color(0xFFF59E0B),
+    driverBg: Color(0xFF0F2A3D),
+    driverFg: Color(0xFF7DD3FC),
+    customerBg: Color(0xFF0F2A1E),
+    customerFg: Color(0xFF86EFAC),
   );
 
-  static const dark = RoleBadgeColors(
-    adminBg: Color(0xFFF9DEDC),
-    adminFg: Color(0xFF410E0B),
-    sellerBg: Color(0xFF683F20),
-    sellerFg: Color(0xFFFBE6CC),
-    driverBg: Color(0xFF2F6E5C),
-    driverFg: Color(0xFFE0F2EE),
-    customerBg: Color(0xFF2C2A86),
-    customerFg: Color(0xFFE2E1FF),
-  );
+  static const light = dark;
 
   (Color, Color) forRole(String role) {
     switch (role) {

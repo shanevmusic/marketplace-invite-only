@@ -79,9 +79,9 @@ class _MarketplaceAppState extends ConsumerState<MarketplaceApp> {
     return MaterialApp.router(
       title: 'Marketplace',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
+      theme: AppTheme.dark(),
       darkTheme: AppTheme.dark(),
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.dark,
       routerConfig: router,
     );
   }
