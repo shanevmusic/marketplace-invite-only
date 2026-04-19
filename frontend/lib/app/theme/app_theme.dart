@@ -18,34 +18,6 @@ class AppTheme {
         roleBadge: RoleBadgeColors.dark,
       );
 
-  static const ColorScheme _lightScheme = ColorScheme(
-    brightness: Brightness.dark,
-    primary: AppColorsLight.primary,
-    onPrimary: AppColorsLight.onPrimary,
-    primaryContainer: AppColorsLight.primaryContainer,
-    onPrimaryContainer: AppColorsLight.onPrimaryContainer,
-    secondary: AppColorsLight.secondary,
-    onSecondary: AppColorsLight.onSecondary,
-    secondaryContainer: AppColorsLight.secondaryContainer,
-    onSecondaryContainer: AppColorsLight.onSecondaryContainer,
-    tertiary: AppColorsLight.tertiary,
-    onTertiary: AppColorsLight.onTertiary,
-    error: AppColorsLight.error,
-    onError: AppColorsLight.onError,
-    errorContainer: AppColorsLight.errorContainer,
-    onErrorContainer: AppColorsLight.onErrorContainer,
-    surface: AppColorsLight.surface,
-    onSurface: AppColorsLight.onSurface,
-    surfaceContainerHighest: AppColorsLight.surfaceVariant,
-    onSurfaceVariant: AppColorsLight.onSurfaceVariant,
-    outline: AppColorsLight.outline,
-    outlineVariant: AppColorsLight.outlineVariant,
-    shadow: AppColorsLight.shadow,
-    scrim: AppColorsLight.scrim,
-    inverseSurface: AppColorsLight.inverseSurface,
-    onInverseSurface: AppColorsLight.onInverseSurface,
-  );
-
   static const ColorScheme _darkScheme = ColorScheme(
     brightness: Brightness.dark,
     primary: AppColorsDark.primary,
