@@ -172,7 +172,7 @@ class _DriverMap extends StatelessWidget {
       builder: (ctx, box) {
         final center = Offset(box.maxWidth / 2, box.maxHeight / 2);
         const r = 90.0;
-        final destAngle = math.pi / 4;
+        const destAngle = math.pi / 4;
         final destPoint =
             destLat == null ? null : center + Offset(math.cos(destAngle) * r, math.sin(destAngle) * r);
         return CustomPaint(
