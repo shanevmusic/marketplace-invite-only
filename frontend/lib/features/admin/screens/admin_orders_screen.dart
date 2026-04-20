@@ -6,7 +6,6 @@ import '../../../app/theme/tokens.dart';
 import '../../../shared/format/money.dart';
 import '../../../shared/widgets/app_empty_state.dart';
 import '../../../shared/widgets/app_list_tile.dart';
-import '../data/admin_dtos.dart';
 import '../state/admin_controllers.dart';
 
 /// Admin → Orders tab.  Lists every order across the platform with a
