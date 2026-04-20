@@ -34,6 +34,8 @@ from app.api.v1.auth import router as auth_router
 from app.api.v1.conversations import router as conversations_router
 from app.api.v1.deliveries import admin_router as admin_deliveries_router
 from app.api.v1.deliveries import router as deliveries_router
+from app.api.v1.delivery_flow import admin_router as admin_delivery_flow_router
+from app.api.v1.delivery_flow import router as delivery_flow_router
 from app.api.v1.invites import router as invites_router
 from app.api.v1.keys import router as keys_router
 from app.api.v1.orders import router as orders_router
@@ -322,6 +324,8 @@ def create_app() -> FastAPI:
     application.include_router(admin_orders_router, prefix="/api/v1")
     application.include_router(deliveries_router, prefix="/api/v1")
     application.include_router(admin_deliveries_router, prefix="/api/v1")
+    application.include_router(delivery_flow_router, prefix="/api/v1")
+    application.include_router(admin_delivery_flow_router, prefix="/api/v1")
     application.include_router(keys_router, prefix="/api/v1")
     application.include_router(conversations_router, prefix="/api/v1")
     application.include_router(admin_messages_router, prefix="/api/v1")

@@ -12,6 +12,10 @@ import '../../features/auth/screens/signup_screen.dart';
 import '../../features/auth/screens/splash_screen.dart';
 import '../../features/auth/state/auth_controller.dart';
 import '../../features/checkout/screens/checkout_screen.dart';
+import '../../features/delivery_flow/screens/admin_order_tracking_screen.dart';
+import '../../features/delivery_flow/screens/customer_delivery_status_screen.dart';
+import '../../features/delivery_flow/screens/driver_delivery_map_screen.dart';
+import '../../features/delivery_flow/screens/order_chat_screen.dart';
 import '../../features/messaging/screens/conversation_detail_screen.dart';
 import '../../features/messaging/screens/conversations_list_screen.dart';
 import '../../features/orders/screens/customer_order_detail_screen.dart';
@@ -102,6 +106,30 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/checkout/:sellerId',
         builder: (_, s) =>
             CheckoutScreen(sellerId: s.pathParameters['sellerId']!),
+      ),
+      // Delivery-flow screens — top-level so bottom nav hides (migration 0010).
+      GoRoute(
+        path: '/home/customer/orders/:id/delivery',
+        builder: (_, s) => CustomerDeliveryStatusScreen(
+          orderId: s.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/home/driver/orders/:id/map',
+        builder: (_, s) => DriverDeliveryMapScreen(
+          orderId: s.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/home/orders/:id/chat',
+        builder: (_, s) =>
+            OrderChatScreen(orderId: s.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/home/admin/orders/:id/tracking',
+        builder: (_, s) => AdminOrderTrackingScreen(
+          orderId: s.pathParameters['id']!,
+        ),
       ),
       // Account settings — top-level full-screen pages (not inside any shell).
       GoRoute(

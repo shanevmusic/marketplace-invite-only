@@ -43,6 +43,15 @@ abstract class AppRoutes {
   static const driverHistory = '/home/driver/history';
   static const driverProfile = '/home/driver/profile';
 
+  // Delivery-flow routes (migration 0010).
+  static String customerDeliveryStatus(String id) =>
+      '/home/customer/orders/$id/delivery';
+  static String driverDeliveryMap(String id) =>
+      '/home/driver/orders/$id/map';
+  static String orderChat(String id) => '/home/orders/$id/chat';
+  static String adminOrderTracking(String id) =>
+      '/home/admin/orders/$id/tracking';
+
   static const adminInvites = '/home/admin/invites';
   static const adminUsers = '/home/admin/users';
   static const adminDrivers = '/home/admin/drivers';

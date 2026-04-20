@@ -112,6 +112,20 @@ class Order(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
         sa.Text, nullable=True
     )
 
+    # Delivery-flow / retention (migration 0010).
+    driver_accepted_at: Mapped[Optional[sa.DateTime]] = mapped_column(
+        sa.TIMESTAMP(timezone=True), nullable=True
+    )
+    customer_visible_after: Mapped[Optional[sa.DateTime]] = mapped_column(
+        sa.TIMESTAMP(timezone=True), nullable=True
+    )
+    seller_full_visible_until: Mapped[Optional[sa.DateTime]] = mapped_column(
+        sa.TIMESTAMP(timezone=True), nullable=True
+    )
+    delivery_code_locked: Mapped[bool] = mapped_column(
+        sa.Boolean, nullable=False, server_default=sa.text("false")
+    )
+
     # ------------------------------------------------------------------
     # Relationships
     # ------------------------------------------------------------------
