@@ -57,11 +57,27 @@ async def list_orders(
     db: AsyncSession = Depends(get_db),
     caller: User = Depends(get_current_user),
 ) -> OrderListResponse:
-    """List orders visible to the caller."""
+    """List orders visible to the caller — with retention masking."""
     orders = await order_service.list_orders_for_caller(
         db, caller, status=status, limit=limit
     )
-    return OrderListResponse(data=[_render(o) for o in orders])
+
+    rendered: list[OrderResponse] = []
+    for o in orders:
+        if caller.role == "customer" and order_service.is_customer_hidden(o):
+            continue  # 30-min post-delivery hide window
+        if caller.role == "customer" and order_service.is_customer_masked(o):
+            rendered.append(
+                OrderResponse(**order_service.mask_customer_order_response(o))
+            )
+            continue
+        if caller.role == "seller" and order_service.is_seller_stripped(o):
+            rendered.append(
+                OrderResponse(**order_service.mask_seller_order_response(o))
+            )
+            continue
+        rendered.append(_render(o))
+    return OrderListResponse(data=rendered)
 
 
 @router.get("/{order_id}", response_model=OrderResponse)

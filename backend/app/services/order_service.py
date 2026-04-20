@@ -223,7 +223,10 @@ async def create_order(
     )
     total = subtotal  # No fees / tax in Phase 5.
 
+    from datetime import datetime, timedelta, timezone as _tz
+
     order_id = uuid.uuid4()
+    _now = datetime.now(_tz.utc)
     order = Order(
         id=order_id,
         customer_id=customer.id,
@@ -233,6 +236,7 @@ async def create_order(
         subtotal_minor=subtotal,
         total_minor=total,
         delivery_address=delivery_address,
+        seller_full_visible_until=_now + timedelta(days=7),
     )
     db.add(order)
     await db.flush()
@@ -966,6 +970,87 @@ async def update_retention_settings(
 # ---------------------------------------------------------------------------
 # Response helpers
 # ---------------------------------------------------------------------------
+
+
+def mask_seller_order_response(order: Order) -> dict[str, Any]:
+    """Seller post-7d view: {id, total, placed_at, customer_id} — no detail."""
+    return {
+        "id": order.id,
+        "customer_id": order.customer_id,
+        "seller_id": order.seller_id,
+        "store_id": order.store_id,
+        "status": "hidden",
+        "subtotal_minor": order.total_minor,
+        "total_minor": order.total_minor,
+        "delivery_address": {},
+        "placed_at": order.placed_at,
+        "accepted_at": None,
+        "preparing_at": None,
+        "out_for_delivery_at": None,
+        "delivered_at": None,
+        "completed_at": None,
+        "cancelled_at": None,
+        "cancellation_reason": None,
+        "items": [],
+        "delivery": None,
+        "driver_assignment": None,
+    }
+
+
+def mask_customer_order_response(order: Order) -> dict[str, Any]:
+    """Customer post-30m view: {id, total, placed_at} only."""
+    return {
+        "id": order.id,
+        "customer_id": order.customer_id,
+        "seller_id": order.seller_id,
+        "store_id": order.store_id,
+        "status": "hidden",
+        "subtotal_minor": order.total_minor,
+        "total_minor": order.total_minor,
+        "delivery_address": {},
+        "placed_at": order.placed_at,
+        "accepted_at": None,
+        "preparing_at": None,
+        "out_for_delivery_at": None,
+        "delivered_at": None,
+        "completed_at": None,
+        "cancelled_at": None,
+        "cancellation_reason": None,
+        "items": [],
+        "delivery": None,
+        "driver_assignment": None,
+    }
+
+
+def is_customer_hidden(order: Order, *, now: Optional[datetime] = None) -> bool:
+    """True if a delivered order is in the 30-min post-delivery hide window."""
+    if order.delivered_at is None:
+        return False
+    threshold = order.customer_visible_after
+    if threshold is None:
+        threshold = order.delivered_at + timedelta(minutes=30)
+    _n = now or datetime.now(timezone.utc)
+    return _n < threshold
+
+
+def is_seller_stripped(order: Order, *, now: Optional[datetime] = None) -> bool:
+    """True if seller should see only the masked summary."""
+    threshold = order.seller_full_visible_until
+    if threshold is None:
+        threshold = order.placed_at + timedelta(days=7)
+    _n = now or datetime.now(timezone.utc)
+    return _n >= threshold
+
+
+def is_customer_masked(order: Order, *, now: Optional[datetime] = None) -> bool:
+    """After the 30-min hide window, amount-only view begins indefinitely."""
+    if order.delivered_at is None:
+        return False
+    threshold = order.customer_visible_after
+    if threshold is None:
+        threshold = order.delivered_at + timedelta(minutes=30)
+    _n = now or datetime.now(timezone.utc)
+    return _n >= threshold
 
 
 def order_to_response_dict(order: Order) -> dict[str, Any]:

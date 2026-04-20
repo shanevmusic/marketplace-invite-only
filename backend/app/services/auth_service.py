@@ -343,3 +343,121 @@ async def get_me(
         sa.select(User).where(User.id == user.id)
     )
     return result.scalar_one()
+
+
+async def update_me(
+    db: AsyncSession,
+    user: User,
+    display_name: Optional[str] = None,
+    phone: Optional[str] = None,
+    avatar_url: Optional[str] = None,
+) -> User:
+    """Update the authenticated user's profile fields (only provided fields).
+
+    Returns the refreshed User row after committing.
+    """
+    # Re-fetch with a SELECT FOR UPDATE to avoid lost-update races.
+    result = await db.execute(
+        sa.select(User).where(User.id == user.id).with_for_update()
+    )
+    fresh = result.scalar_one()
+
+    if display_name is not None:
+        fresh.display_name = display_name
+    if phone is not None:
+        fresh.phone = phone
+    if avatar_url is not None:
+        fresh.avatar_url = avatar_url
+
+    await db.commit()
+    await db.refresh(fresh)
+    return fresh
+
+
+async def change_password(
+    db: AsyncSession,
+    user: User,
+    current_password: str,
+    new_password: str,
+) -> None:
+    """Change the user's password after verifying the current one.
+
+    Raises:
+        ValueError: if current_password does not match the stored hash.
+        ValueError: if new_password fails policy validation.
+    """
+    # Re-fetch to get a fresh password_hash (may have been rotated).
+    result = await db.execute(
+        sa.select(User).where(User.id == user.id).with_for_update()
+    )
+    fresh = result.scalar_one()
+
+    if not verify_password(current_password, fresh.password_hash):
+        raise ValueError("Current password is incorrect")
+
+    fresh.password_hash = hash_password(new_password)
+    await db.commit()
+
+
+async def get_or_create_notification_prefs(
+    db: AsyncSession,
+    user: User,
+) -> "UserNotificationPrefs":
+    """Return the user's notification prefs, creating defaults if missing."""
+    from app.models.user_notification_prefs import UserNotificationPrefs
+
+    result = await db.execute(
+        sa.select(UserNotificationPrefs).where(
+            UserNotificationPrefs.user_id == user.id
+        )
+    )
+    prefs = result.scalar_one_or_none()
+    if prefs is None:
+        prefs = UserNotificationPrefs(user_id=user.id)
+        db.add(prefs)
+        await db.commit()
+        await db.refresh(prefs)
+    return prefs
+
+
+async def update_notification_prefs(
+    db: AsyncSession,
+    user: User,
+    push_enabled: Optional[bool] = None,
+    email_enabled: Optional[bool] = None,
+    order_updates: Optional[bool] = None,
+    messages: Optional[bool] = None,
+    marketing: Optional[bool] = None,
+) -> "UserNotificationPrefs":
+    """Update any subset of the user's notification preference flags.
+
+    Auto-creates the prefs row with defaults if it doesn't exist yet.
+    Returns the updated prefs.
+    """
+    from app.models.user_notification_prefs import UserNotificationPrefs
+
+    result = await db.execute(
+        sa.select(UserNotificationPrefs)
+        .where(UserNotificationPrefs.user_id == user.id)
+        .with_for_update()
+    )
+    prefs = result.scalar_one_or_none()
+    if prefs is None:
+        prefs = UserNotificationPrefs(user_id=user.id)
+        db.add(prefs)
+        await db.flush()
+
+    if push_enabled is not None:
+        prefs.push_enabled = push_enabled
+    if email_enabled is not None:
+        prefs.email_enabled = email_enabled
+    if order_updates is not None:
+        prefs.order_updates = order_updates
+    if messages is not None:
+        prefs.messages = messages
+    if marketing is not None:
+        prefs.marketing = marketing
+
+    await db.commit()
+    await db.refresh(prefs)
+    return prefs

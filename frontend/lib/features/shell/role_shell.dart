@@ -25,7 +25,8 @@ import '../orders/screens/customer_orders_screen.dart';
 import '../orders/screens/seller_orders_screen.dart';
 import '../admin/screens/admin_analytics_screen.dart';
 import '../admin/screens/admin_content_screen.dart';
-import '../admin/screens/admin_ops_screen.dart';
+import '../admin/screens/admin_drivers_screen.dart';
+import '../admin/screens/admin_orders_screen.dart';
 import '../admin/screens/admin_users_screen.dart';
 import '../products/screens/seller_products_screen.dart';
 import '../sellers/screens/seller_dashboard_screen.dart';
@@ -55,9 +56,14 @@ int _indexForLocation(String loc, List<_TabSpec> tabs) {
 }
 
 class _ShellScaffold extends ConsumerWidget {
-  const _ShellScaffold({required this.title, required this.tabs});
+  const _ShellScaffold({
+    required this.title,
+    required this.tabs,
+    this.trailing = const [],
+  });
   final String title;
   final List<_TabSpec> tabs;
+  final List<Widget> trailing;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -65,7 +71,7 @@ class _ShellScaffold extends ConsumerWidget {
     final idx = _indexForLocation(loc, tabs);
     final tab = tabs[idx];
     return Scaffold(
-      appBar: AppTopBar(title: tab.title ?? title),
+      appBar: AppTopBar(title: tab.title ?? title, trailing: trailing),
       body: SafeArea(
         child: IndexedStack(
           index: idx,
@@ -271,6 +277,15 @@ class AdminShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return _ShellScaffold(
       title: 'Users',
+      trailing: [
+        Builder(
+          builder: (ctx) => IconButton(
+            tooltip: 'Account',
+            icon: const Icon(Icons.account_circle_outlined),
+            onPressed: () => ctx.go(AppRoutes.adminAccount),
+          ),
+        ),
+      ],
       tabs: const [
         _TabSpec(
           icon: Icons.people_outline,
@@ -279,6 +294,22 @@ class AdminShell extends ConsumerWidget {
           path: AppRoutes.adminUsers,
           title: 'Users',
           body: AdminUsersScreen(),
+        ),
+        _TabSpec(
+          icon: Icons.local_shipping_outlined,
+          activeIcon: Icons.local_shipping,
+          label: 'Drivers',
+          path: AppRoutes.adminDrivers,
+          title: 'Drivers',
+          body: AdminDriversScreen(),
+        ),
+        _TabSpec(
+          icon: Icons.receipt_long_outlined,
+          activeIcon: Icons.receipt_long,
+          label: 'Orders',
+          path: AppRoutes.adminOrders,
+          title: 'Orders',
+          body: AdminOrdersScreen(),
         ),
         _TabSpec(
           icon: Icons.inventory_2_outlined,
@@ -295,14 +326,6 @@ class AdminShell extends ConsumerWidget {
           path: AppRoutes.adminAnalytics,
           title: 'Analytics',
           body: AdminAnalyticsScreen(),
-        ),
-        _TabSpec(
-          icon: Icons.settings_outlined,
-          activeIcon: Icons.settings,
-          label: 'Ops',
-          path: AppRoutes.adminOps,
-          title: 'Ops',
-          body: AdminOpsScreen(),
         ),
       ],
     );
@@ -339,6 +362,11 @@ class ProfileTab extends ConsumerWidget {
                   )),
             ],
           ),
+        ),
+        AppListTile(
+          leading: const Icon(Icons.settings_outlined),
+          title: 'Account settings',
+          onTap: () => context.go(AppRoutes.accountSettings),
         ),
         AppListTile(
           leading: const Icon(Icons.badge_outlined),

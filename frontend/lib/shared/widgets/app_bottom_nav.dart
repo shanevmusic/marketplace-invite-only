@@ -16,6 +16,11 @@ class AppBottomNavItem {
   final String? semanticsLabel;
 }
 
+/// A static, zero-animation bottom navigation bar.
+///
+/// Swapped from Material 3's [NavigationBar] because its default pill/indicator
+/// slide animation (~500ms) felt sluggish on tab switches. This version changes
+/// the selected tab instantly with no transition.
 class AppBottomNav extends StatelessWidget {
   const AppBottomNav({
     super.key,
@@ -31,21 +36,74 @@ class AppBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colors;
-    return NavigationBar(
-      selectedIndex: currentIndex,
-      onDestinationSelected: onTap,
-      backgroundColor: scheme.surface,
-      indicatorColor: scheme.primaryContainer,
-      height: 64,
-      destinations: [
-        for (final it in items)
-          NavigationDestination(
-            icon: Icon(it.icon, color: scheme.onSurfaceVariant),
-            selectedIcon: Icon(it.activeIcon, color: scheme.primary),
-            label: it.label,
-            tooltip: it.semanticsLabel ?? it.label,
+    return Material(
+      color: scheme.surface,
+      elevation: 0,
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 64,
+          child: Row(
+            children: [
+              for (int i = 0; i < items.length; i++)
+                Expanded(
+                  child: _NavItem(
+                    item: items[i],
+                    selected: i == currentIndex,
+                    onTap: () => onTap(i),
+                  ),
+                ),
+            ],
           ),
-      ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem extends StatelessWidget {
+  const _NavItem({
+    required this.item,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final AppBottomNavItem item;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    final color = selected ? scheme.primary : scheme.onSurfaceVariant;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: item.semanticsLabel ?? item.label,
+      child: InkWell(
+        onTap: onTap,
+        splashColor: scheme.primaryContainer.withValues(alpha: 0.4),
+        highlightColor: Colors.transparent,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              selected ? item.activeIcon : item.icon,
+              color: color,
+              size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              item.label,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

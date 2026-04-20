@@ -5,9 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/routes.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../shared/format/money.dart';
+import '../../../shared/invites/invite_link_dialog.dart';
+import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/app_empty_state.dart';
 import '../../../shared/widgets/metric_card.dart';
 import '../../stores/state/store_controller.dart';
+import '../data/seller_dtos.dart';
 import '../state/seller_controller.dart';
 
 class SellerDashboardScreen extends ConsumerWidget {
@@ -71,12 +74,71 @@ class SellerDashboardScreen extends ConsumerWidget {
                       value: '${d.activeOrdersCount}',
                       onTap: () => context.go(AppRoutes.sellerOrders),
                     ),
+                    const SizedBox(height: AppSpacing.s3),
+                    MetricCard(
+                      label: 'Invite a customer or seller',
+                      value: 'Share link',
+                      caption: 'Tap to get your referral link',
+                      trailing: const Icon(Icons.share_outlined),
+                      onTap: () => _openInviteSheet(context, ref),
+                    ),
+                    const SizedBox(height: AppSpacing.s3),
+                    MetricCard(
+                      label: 'Store visibility',
+                      value: store.isPublic ? 'Public' : 'Invite-only',
+                      caption: store.isPublic
+                          ? 'Any signed-up customer can find your store'
+                          : 'Only invited customers can see your store',
+                      trailing: const Icon(Icons.tune_outlined),
+                      onTap: () => context.go(AppRoutes.sellerStoreEdit),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
         );
+      },
+    );
+  }
+
+  Future<void> _openInviteSheet(BuildContext context, WidgetRef ref) async {
+    final api = ref.read(sellerApiProvider);
+    SellerInvite invite;
+    try {
+      invite = await api.getOrCreateReferral();
+    } catch (e) {
+      if (context.mounted) {
+        context.showAppSnackbar(message: 'Could not load invite: $e');
+      }
+      return;
+    }
+    if (!context.mounted) return;
+    await InviteLinkSheet.show(
+      context,
+      token: invite.token,
+      title: 'Your referral link',
+      subtitle:
+          'Share this with anyone who should join. They\'ll land on the signup page — no email required. '
+          '${invite.usedCount} signup${invite.usedCount == 1 ? '' : 's'} so far.',
+      onRegenerate: () async {
+        try {
+          final fresh = await api.regenerateReferral();
+          if (!context.mounted) return;
+          context.showAppSnackbar(message: 'New link generated');
+          await InviteLinkSheet.show(
+            context,
+            token: fresh.token,
+            title: 'Your referral link',
+            subtitle:
+                'Old link is now invalid. Share this new one with anyone who should join.',
+            onRegenerate: () {},
+          );
+        } catch (e) {
+          if (context.mounted) {
+            context.showAppSnackbar(message: 'Failed to regenerate: $e');
+          }
+        }
       },
     );
   }

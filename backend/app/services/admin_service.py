@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
 from app.models.invite_link import InviteLink
+from app.models.order import Order
 from app.models.order_analytics_snapshot import OrderAnalyticsSnapshot
 from app.models.product import Product
 from app.models.referral import Referral
@@ -189,6 +190,49 @@ async def list_products(
     has_more = len(rows) > limit
     rows = rows[:limit]
     next_cursor = rows[-1].created_at.isoformat() if has_more and rows else None
+    return rows, next_cursor
+
+
+# ---------------------------------------------------------------------------
+# Orders (admin oversight)
+# ---------------------------------------------------------------------------
+
+VALID_ORDER_STATUSES = {
+    "pending",
+    "accepted",
+    "preparing",
+    "out_for_delivery",
+    "delivered",
+    "completed",
+    "cancelled",
+}
+
+
+async def list_orders(
+    db: AsyncSession,
+    *,
+    status: Optional[str] = None,
+    cursor: Optional[str] = None,
+    limit: int = 25,
+) -> tuple[list[Order], Optional[str]]:
+    """Paginated order list for admin. Cursor is last row's ``placed_at.isoformat()``."""
+    limit = max(1, min(limit, 100))
+    stmt = sa.select(Order).where(Order.deleted_at.is_(None))
+    if status and status in VALID_ORDER_STATUSES:
+        stmt = stmt.where(Order.status == status)
+    if cursor:
+        try:
+            ts = datetime.fromisoformat(cursor)
+            stmt = stmt.where(Order.placed_at < ts)
+        except ValueError:
+            pass
+    stmt = stmt.order_by(Order.placed_at.desc()).limit(limit + 1)
+
+    result = await db.execute(stmt)
+    rows = list(result.scalars().all())
+    has_more = len(rows) > limit
+    rows = rows[:limit]
+    next_cursor = rows[-1].placed_at.isoformat() if has_more and rows else None
     return rows, next_cursor
 
 

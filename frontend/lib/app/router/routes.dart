@@ -33,6 +33,7 @@ abstract class AppRoutes {
   static const sellerOrders = '/home/seller/orders';
   static const sellerStore = '/home/seller/profile';
   static const sellerStoreNew = '/home/seller/dashboard/store/new';
+  static const sellerStoreEdit = '/home/seller/dashboard/store/edit';
   static String sellerProductNew() => '$sellerProducts/new';
   static String sellerProductEdit(String id) => '$sellerProducts/$id/edit';
   static String sellerOrderDetail(String id) => '$sellerOrders/$id';
@@ -42,13 +43,32 @@ abstract class AppRoutes {
   static const driverHistory = '/home/driver/history';
   static const driverProfile = '/home/driver/profile';
 
+  // Delivery-flow routes (migration 0010).
+  static String customerDeliveryStatus(String id) =>
+      '/home/customer/orders/$id/delivery';
+  static String driverDeliveryMap(String id) =>
+      '/home/driver/orders/$id/map';
+  static String orderChat(String id) => '/home/orders/$id/chat';
+  static String adminOrderTracking(String id) =>
+      '/home/admin/orders/$id/tracking';
+
   static const adminInvites = '/home/admin/invites';
   static const adminUsers = '/home/admin/users';
+  static const adminDrivers = '/home/admin/drivers';
+  static const adminOrders = '/home/admin/orders';
   static const adminContent = '/home/admin/content';
   static const adminAnalytics = '/home/admin/analytics';
   static const adminOps = '/home/admin/ops';
+  static const adminProfile = '/home/admin/profile';
+  static const adminAccount = '/home/admin/account';
   static const adminSettings = '/home/admin/settings';
   static const adminLogs = '/home/admin/logs';
+
+  // Account settings — top-level full-screen pages (not inside shell).
+  static const accountSettings = '/settings';
+  static const editProfile = '/settings/profile';
+  static const changePassword = '/settings/password';
+  static const notificationPrefs = '/settings/notifications';
 
   /// Resolves the default landing path for a given role.
   static String homeFor(String role) {

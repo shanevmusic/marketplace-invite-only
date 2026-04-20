@@ -24,4 +24,26 @@ class SellerApi {
       throw ApiException.fromDio(e);
     }
   }
+
+  /// Returns the active seller_referral invite (creating one if needed).
+  /// Idempotent — same token until regenerated.
+  Future<SellerInvite> getOrCreateReferral() async {
+    try {
+      final r = await _dio.post<Map<String, dynamic>>('/invites/seller_referral');
+      return SellerInvite.fromJson(r.data!);
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
+  }
+
+  /// Revokes the current seller_referral and issues a new one.
+  Future<SellerInvite> regenerateReferral() async {
+    try {
+      final r =
+          await _dio.post<Map<String, dynamic>>('/invites/seller_referral/regenerate');
+      return SellerInvite.fromJson(r.data!);
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
+  }
 }

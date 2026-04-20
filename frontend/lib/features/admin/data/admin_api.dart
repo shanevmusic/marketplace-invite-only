@@ -130,6 +130,27 @@ class AdminApi {
     }
   }
 
+  // ----------------------------------------------------------------- orders
+  Future<AdminPagedOrders> listOrders({
+    String? status,
+    String? cursor,
+    int limit = 25,
+  }) async {
+    try {
+      final r = await _dio.get<Map<String, dynamic>>(
+        '/admin/orders',
+        queryParameters: {
+          if (status != null && status.isNotEmpty) 'status': status,
+          if (cursor != null) 'cursor': cursor,
+          'limit': limit,
+        },
+      );
+      return AdminPagedOrders.fromJson(r.data!);
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
+  }
+
   // -------------------------------------------------------------- analytics
   Future<AdminAnalyticsOverview> overview() async {
     try {

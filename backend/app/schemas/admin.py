@@ -105,6 +105,30 @@ class DisableProductRequest(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Orders
+# ---------------------------------------------------------------------------
+
+
+class AdminOrderSummary(BaseModel):
+    """Compact admin view of an order — keeps payload small for list screens."""
+
+    id: uuid.UUID
+    customer_id: uuid.UUID
+    seller_id: uuid.UUID
+    store_id: uuid.UUID
+    status: str
+    total_minor: int
+    placed_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class AdminOrderListResponse(BaseModel):
+    data: list[AdminOrderSummary]
+    pagination: dict[str, Any]
+
+
+# ---------------------------------------------------------------------------
 # Analytics
 # ---------------------------------------------------------------------------
 

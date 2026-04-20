@@ -150,6 +150,55 @@ class AdminPagedProducts {
       );
 }
 
+// ---------------------------------------------------------------------------
+// Orders (admin oversight)
+// ---------------------------------------------------------------------------
+
+class AdminOrderSummary {
+  const AdminOrderSummary({
+    required this.id,
+    required this.customerId,
+    required this.sellerId,
+    required this.storeId,
+    required this.status,
+    required this.totalMinor,
+    required this.placedAt,
+  });
+
+  final String id;
+  final String customerId;
+  final String sellerId;
+  final String storeId;
+  final String status;
+  final int totalMinor;
+  final DateTime placedAt;
+
+  factory AdminOrderSummary.fromJson(Map<String, dynamic> j) =>
+      AdminOrderSummary(
+        id: j['id'] as String,
+        customerId: j['customer_id'] as String,
+        sellerId: j['seller_id'] as String,
+        storeId: j['store_id'] as String,
+        status: j['status'] as String,
+        totalMinor: (j['total_minor'] as num).toInt(),
+        placedAt: DateTime.parse(j['placed_at'] as String),
+      );
+}
+
+class AdminPagedOrders {
+  const AdminPagedOrders({required this.data, required this.nextCursor});
+  final List<AdminOrderSummary> data;
+  final String? nextCursor;
+
+  factory AdminPagedOrders.fromJson(Map<String, dynamic> j) => AdminPagedOrders(
+        data: (j['data'] as List)
+            .map((e) => AdminOrderSummary.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        nextCursor: (j['pagination'] as Map<String, dynamic>?)?['next_cursor']
+            as String?,
+      );
+}
+
 class AdminAnalyticsOverview {
   const AdminAnalyticsOverview({
     required this.totalGmvMinor,

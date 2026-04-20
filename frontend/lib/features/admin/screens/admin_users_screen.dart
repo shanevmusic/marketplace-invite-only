@@ -8,6 +8,7 @@ import '../../../shared/widgets/app_dialog.dart';
 import '../../../shared/widgets/app_empty_state.dart';
 import '../../../shared/widgets/app_input.dart';
 import '../../../shared/widgets/app_list_tile.dart';
+import '../../../shared/invites/invite_link_dialog.dart';
 import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/role_badge.dart';
 import '../state/admin_controllers.dart';
@@ -392,7 +393,16 @@ Future<void> _showIssueInvite(BuildContext context, WidgetRef ref) async {
               .read(adminApiProvider)
               .issueInvite(roleTarget: role, expiresInDays: days);
           if (context.mounted) {
-            _showInviteToken(context, invite.token);
+            InviteLinkSheet.show(
+              context,
+              token: invite.token,
+              title: 'Invite created',
+              roleTarget: invite.roleTarget,
+              subtitle: invite.expiresAt != null
+                  ? 'Single-use invite for a new $role. Expires '
+                      '${invite.expiresAt!.toLocal().toString().split('.').first}.'
+                  : 'Single-use invite for a new $role.',
+            );
           }
         } catch (e) {
           if (context.mounted) {
@@ -403,18 +413,6 @@ Future<void> _showIssueInvite(BuildContext context, WidgetRef ref) async {
     ),
     secondaryAction: AppDialogAction(
       label: 'Cancel',
-      onPressed: () => Navigator.of(context).pop(),
-    ),
-  );
-}
-
-void _showInviteToken(BuildContext context, String token) {
-  AppDialog.show(
-    context,
-    title: 'Invite token',
-    body: SelectableText(token, style: context.textStyles.bodyMedium),
-    primaryAction: AppDialogAction(
-      label: 'Done',
       onPressed: () => Navigator.of(context).pop(),
     ),
   );

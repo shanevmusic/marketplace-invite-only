@@ -21,6 +21,8 @@ from app.schemas.admin import (
     AdminAnalyticsOverview,
     AdminIssueInviteRequest,
     AdminIssueInviteResponse,
+    AdminOrderListResponse,
+    AdminOrderSummary,
     AdminProductListResponse,
     AdminProductSummary,
     AdminUserDetail,
@@ -236,6 +238,28 @@ async def restore_product(
 ) -> AdminProductSummary:
     product = await admin_service.restore_product(db, product_id)
     return AdminProductSummary.model_validate(product)
+
+
+# ---------------------------------------------------------------------------
+# Orders (admin oversight)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/orders", response_model=AdminOrderListResponse)
+async def list_orders(
+    status: Optional[str] = Query(default=None),
+    cursor: Optional[str] = Query(default=None),
+    limit: int = Query(default=25, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    caller: User = Depends(get_current_admin),
+) -> AdminOrderListResponse:
+    rows, next_cursor = await admin_service.list_orders(
+        db, status=status, cursor=cursor, limit=limit
+    )
+    return AdminOrderListResponse(
+        data=[AdminOrderSummary.model_validate(o) for o in rows],
+        pagination={"next_cursor": next_cursor, "has_more": next_cursor is not None},
+    )
 
 
 # ---------------------------------------------------------------------------

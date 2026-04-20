@@ -55,6 +55,17 @@ class Store(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
         default=True,
         server_default=sa.text("true"),
     )
+    is_public: Mapped[bool] = mapped_column(
+        sa.Boolean,
+        nullable=False,
+        default=False,
+        server_default=sa.text("false"),
+        comment=(
+            "If true, any logged-in customer can browse this store via "
+            "Discover. If false (default), only customers referred by "
+            "this seller's invite link can see it (ADR-0007)."
+        ),
+    )
 
     # ------------------------------------------------------------------
     # Relationships

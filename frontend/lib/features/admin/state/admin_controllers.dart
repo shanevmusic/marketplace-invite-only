@@ -203,6 +203,180 @@ final adminProductsControllerProvider =
         AdminProductsController.new);
 
 // ---------------------------------------------------------------------------
+// Drivers (specialised view of /admin/users?role=driver)
+// ---------------------------------------------------------------------------
+
+class AdminDriversState {
+  const AdminDriversState({
+    required this.drivers,
+    required this.nextCursor,
+    required this.isLoadingMore,
+  });
+  final List<AdminUserSummary> drivers;
+  final String? nextCursor;
+  final bool isLoadingMore;
+
+  bool get hasMore => nextCursor != null;
+
+  AdminDriversState copyWith({
+    List<AdminUserSummary>? drivers,
+    String? nextCursor,
+    bool? isLoadingMore,
+    bool clearCursor = false,
+  }) {
+    return AdminDriversState(
+      drivers: drivers ?? this.drivers,
+      nextCursor: clearCursor ? null : (nextCursor ?? this.nextCursor),
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    );
+  }
+}
+
+class AdminDriversController extends AsyncNotifier<AdminDriversState> {
+  @override
+  Future<AdminDriversState> build() async {
+    final page =
+        await ref.read(adminApiProvider).listUsers(role: 'driver');
+    return AdminDriversState(
+      drivers: page.data,
+      nextCursor: page.nextCursor,
+      isLoadingMore: false,
+    );
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      final page =
+          await ref.read(adminApiProvider).listUsers(role: 'driver');
+      return AdminDriversState(
+        drivers: page.data,
+        nextCursor: page.nextCursor,
+        isLoadingMore: false,
+      );
+    });
+  }
+
+  Future<void> loadMore() async {
+    final current = state.valueOrNull;
+    if (current == null || !current.hasMore || current.isLoadingMore) return;
+    state = AsyncValue.data(current.copyWith(isLoadingMore: true));
+    try {
+      final page = await ref.read(adminApiProvider).listUsers(
+            role: 'driver',
+            cursor: current.nextCursor,
+          );
+      state = AsyncValue.data(
+        current.copyWith(
+          drivers: [...current.drivers, ...page.data],
+          nextCursor: page.nextCursor,
+          clearCursor: page.nextCursor == null,
+          isLoadingMore: false,
+        ),
+      );
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+}
+
+final adminDriversControllerProvider =
+    AsyncNotifierProvider<AdminDriversController, AdminDriversState>(
+        AdminDriversController.new);
+
+// ---------------------------------------------------------------------------
+// Orders (admin oversight)
+// ---------------------------------------------------------------------------
+
+class AdminOrdersFilter {
+  const AdminOrdersFilter({this.status});
+  final String? status;
+}
+
+class AdminOrdersState {
+  const AdminOrdersState({
+    required this.filter,
+    required this.orders,
+    required this.nextCursor,
+    required this.isLoadingMore,
+  });
+  final AdminOrdersFilter filter;
+  final List<AdminOrderSummary> orders;
+  final String? nextCursor;
+  final bool isLoadingMore;
+
+  bool get hasMore => nextCursor != null;
+
+  AdminOrdersState copyWith({
+    AdminOrdersFilter? filter,
+    List<AdminOrderSummary>? orders,
+    String? nextCursor,
+    bool? isLoadingMore,
+    bool clearCursor = false,
+  }) {
+    return AdminOrdersState(
+      filter: filter ?? this.filter,
+      orders: orders ?? this.orders,
+      nextCursor: clearCursor ? null : (nextCursor ?? this.nextCursor),
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    );
+  }
+}
+
+class AdminOrdersController extends AsyncNotifier<AdminOrdersState> {
+  @override
+  Future<AdminOrdersState> build() async {
+    final page = await ref.read(adminApiProvider).listOrders();
+    return AdminOrdersState(
+      filter: const AdminOrdersFilter(),
+      orders: page.data,
+      nextCursor: page.nextCursor,
+      isLoadingMore: false,
+    );
+  }
+
+  Future<void> applyFilter(AdminOrdersFilter f) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      final page =
+          await ref.read(adminApiProvider).listOrders(status: f.status);
+      return AdminOrdersState(
+        filter: f,
+        orders: page.data,
+        nextCursor: page.nextCursor,
+        isLoadingMore: false,
+      );
+    });
+  }
+
+  Future<void> loadMore() async {
+    final current = state.valueOrNull;
+    if (current == null || !current.hasMore || current.isLoadingMore) return;
+    state = AsyncValue.data(current.copyWith(isLoadingMore: true));
+    try {
+      final page = await ref.read(adminApiProvider).listOrders(
+            status: current.filter.status,
+            cursor: current.nextCursor,
+          );
+      state = AsyncValue.data(
+        current.copyWith(
+          orders: [...current.orders, ...page.data],
+          nextCursor: page.nextCursor,
+          clearCursor: page.nextCursor == null,
+          isLoadingMore: false,
+        ),
+      );
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+}
+
+final adminOrdersControllerProvider =
+    AsyncNotifierProvider<AdminOrdersController, AdminOrdersState>(
+        AdminOrdersController.new);
+
+// ---------------------------------------------------------------------------
 // Analytics
 // ---------------------------------------------------------------------------
 
