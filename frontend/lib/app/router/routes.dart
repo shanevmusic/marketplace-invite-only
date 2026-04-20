@@ -47,8 +47,15 @@ abstract class AppRoutes {
   static const adminContent = '/home/admin/content';
   static const adminAnalytics = '/home/admin/analytics';
   static const adminOps = '/home/admin/ops';
+  static const adminProfile = '/home/admin/profile';
   static const adminSettings = '/home/admin/settings';
   static const adminLogs = '/home/admin/logs';
+
+  // Account settings — top-level full-screen pages (not inside shell).
+  static const accountSettings = '/settings';
+  static const editProfile = '/settings/profile';
+  static const changePassword = '/settings/password';
+  static const notificationPrefs = '/settings/notifications';
 
   /// Resolves the default landing path for a given role.
   static String homeFor(String role) {

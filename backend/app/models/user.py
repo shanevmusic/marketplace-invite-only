@@ -81,6 +81,13 @@ class User(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
         sa.Text,
         nullable=True,
     )
+    avatar_url: Mapped[Optional[str]] = mapped_column(
+        sa.Text,
+        nullable=True,
+        default=None,
+        comment="URL of the user's avatar image (set via PATCH /me).",
+    )
+
     # Plain UUID — no FK — to avoid users ↔ sellers cycle.
     # Logically references sellers.id; enforced at service layer.
     referring_seller_id: Mapped[Optional[uuid.UUID]] = mapped_column(
@@ -118,6 +125,12 @@ class User(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
         uselist=False,
         foreign_keys="Seller.user_id",
     )
+    notification_prefs: Mapped[Optional["UserNotificationPrefs"]] = relationship(  # type: ignore[name-defined]  # noqa: F821
+        "UserNotificationPrefs",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
     __table_args__ = (
         sa.Index("ix_users_deleted_at", "deleted_at"),
@@ -134,3 +147,4 @@ from app.models.refresh_token import RefreshToken  # noqa: E402, F401
 from app.models.invite_link import InviteLink  # noqa: E402, F401
 from app.models.user_public_key import UserPublicKey  # noqa: E402, F401
 from app.models.seller import Seller  # noqa: E402, F401
+from app.models.user_notification_prefs import UserNotificationPrefs  # noqa: E402, F401

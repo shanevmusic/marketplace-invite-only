@@ -304,6 +304,14 @@ class AdminShell extends ConsumerWidget {
           title: 'Ops',
           body: AdminOpsScreen(),
         ),
+        _TabSpec(
+          icon: Icons.person_outline,
+          activeIcon: Icons.person,
+          label: 'Profile',
+          path: AppRoutes.adminProfile,
+          title: 'Profile',
+          body: ProfileTab(),
+        ),
       ],
     );
   }
@@ -339,6 +347,11 @@ class ProfileTab extends ConsumerWidget {
                   )),
             ],
           ),
+        ),
+        AppListTile(
+          leading: const Icon(Icons.settings_outlined),
+          title: 'Account settings',
+          onTap: () => context.go(AppRoutes.accountSettings),
         ),
         AppListTile(
           leading: const Icon(Icons.badge_outlined),

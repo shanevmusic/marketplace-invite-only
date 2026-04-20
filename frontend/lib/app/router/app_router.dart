@@ -21,6 +21,10 @@ import '../../features/products/screens/product_form_screen.dart';
 import '../../features/products/state/product_controller.dart';
 import '../../features/shell/role_shell.dart';
 import '../../features/stores/screens/create_store_screen.dart';
+import '../../features/settings/screens/account_settings_screen.dart';
+import '../../features/settings/screens/change_password_screen.dart';
+import '../../features/settings/screens/edit_profile_screen.dart';
+import '../../features/settings/screens/notification_prefs_screen.dart';
 import '../../features/tracking/customer/screens/customer_tracking_screen.dart';
 import '../../features/tracking/driver/screens/driver_tracking_screen.dart';
 import '../../features/tracking/seller/screens/seller_tracking_screen.dart';
@@ -97,6 +101,25 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, s) =>
             CheckoutScreen(sellerId: s.pathParameters['sellerId']!),
       ),
+      // Account settings — top-level full-screen pages (not inside any shell).
+      GoRoute(
+        path: AppRoutes.accountSettings,
+        builder: (_, __) => const AccountSettingsScreen(),
+        routes: [
+          GoRoute(
+            path: 'profile',
+            builder: (_, __) => const EditProfileScreen(),
+          ),
+          GoRoute(
+            path: 'password',
+            builder: (_, __) => const ChangePasswordScreen(),
+          ),
+          GoRoute(
+            path: 'notifications',
+            builder: (_, __) => const NotificationPrefsScreen(),
+          ),
+        ],
+      ),
       GoRoute(
         path: '/home/customer',
         builder: (_, __) => const CustomerShell(),
@@ -145,6 +168,10 @@ final List<RouteBase> _adminSubRoutes = [
   ),
   GoRoute(
     path: 'ops',
+    pageBuilder: (_, __) => _noTransitionPage(const AdminShell()),
+  ),
+  GoRoute(
+    path: 'profile',
     pageBuilder: (_, __) => _noTransitionPage(const AdminShell()),
   ),
 ];
