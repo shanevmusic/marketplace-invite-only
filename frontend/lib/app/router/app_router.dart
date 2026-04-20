@@ -26,6 +26,13 @@ import '../../features/tracking/driver/screens/driver_tracking_screen.dart';
 import '../../features/tracking/seller/screens/seller_tracking_screen.dart';
 import 'routes.dart';
 
+/// Returns a [NoTransitionPage] — used for tab switches inside a shell so
+/// the content snaps instantly instead of using the platform default
+/// fade/scale transition.
+Page<T> _noTransitionPage<T>(Widget child) {
+  return NoTransitionPage<T>(child: child);
+}
+
 /// Listenable that fires when the AuthController's AsyncValue transitions.
 /// go_router re-runs the redirect on each notification.
 class _AuthRefreshNotifier extends ChangeNotifier {
@@ -124,16 +131,28 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 /// render on deep-link: go_router matched the more specific child builder,
 /// and `SizedBox.shrink()` produced a blank (browser-default white) page.
 final List<RouteBase> _adminSubRoutes = [
-  GoRoute(path: 'users', builder: (_, __) => const AdminShell()),
-  GoRoute(path: 'content', builder: (_, __) => const AdminShell()),
-  GoRoute(path: 'analytics', builder: (_, __) => const AdminShell()),
-  GoRoute(path: 'ops', builder: (_, __) => const AdminShell()),
+  GoRoute(
+    path: 'users',
+    pageBuilder: (_, __) => _noTransitionPage(const AdminShell()),
+  ),
+  GoRoute(
+    path: 'content',
+    pageBuilder: (_, __) => _noTransitionPage(const AdminShell()),
+  ),
+  GoRoute(
+    path: 'analytics',
+    pageBuilder: (_, __) => _noTransitionPage(const AdminShell()),
+  ),
+  GoRoute(
+    path: 'ops',
+    pageBuilder: (_, __) => _noTransitionPage(const AdminShell()),
+  ),
 ];
 
 final List<RouteBase> _customerSubRoutes = [
   GoRoute(
     path: 'discover',
-    builder: (_, __) => const CustomerShell(),
+    pageBuilder: (_, __) => _noTransitionPage(const CustomerShell()),
     routes: [
       GoRoute(
         path: 'product/:id',
@@ -145,7 +164,7 @@ final List<RouteBase> _customerSubRoutes = [
   ),
   GoRoute(
     path: 'orders',
-    builder: (_, __) => const CustomerShell(),
+    pageBuilder: (_, __) => _noTransitionPage(const CustomerShell()),
     routes: [
       GoRoute(
         path: ':id',
@@ -163,11 +182,11 @@ final List<RouteBase> _customerSubRoutes = [
   ),
   GoRoute(
     path: 'cart',
-    builder: (_, __) => const CustomerShell(),
+    pageBuilder: (_, __) => _noTransitionPage(const CustomerShell()),
   ),
   GoRoute(
     path: 'messages',
-    builder: (_, __) => const ConversationsListScreen(),
+    pageBuilder: (_, __) => _noTransitionPage(const ConversationsListScreen()),
     routes: [
       GoRoute(
         path: ':id',
@@ -179,14 +198,14 @@ final List<RouteBase> _customerSubRoutes = [
   ),
   GoRoute(
     path: 'profile',
-    builder: (_, __) => const CustomerShell(),
+    pageBuilder: (_, __) => _noTransitionPage(const CustomerShell()),
   ),
 ];
 
 final List<RouteBase> _sellerSubRoutes = [
   GoRoute(
     path: 'dashboard',
-    builder: (_, __) => const SellerShell(),
+    pageBuilder: (_, __) => _noTransitionPage(const SellerShell()),
     routes: [
       GoRoute(
         path: 'store/new',
@@ -196,7 +215,7 @@ final List<RouteBase> _sellerSubRoutes = [
   ),
   GoRoute(
     path: 'products',
-    builder: (_, __) => const SellerShell(),
+    pageBuilder: (_, __) => _noTransitionPage(const SellerShell()),
     routes: [
       GoRoute(
         path: 'new',
@@ -212,7 +231,7 @@ final List<RouteBase> _sellerSubRoutes = [
   ),
   GoRoute(
     path: 'orders',
-    builder: (_, __) => const SellerShell(),
+    pageBuilder: (_, __) => _noTransitionPage(const SellerShell()),
     routes: [
       GoRoute(
         path: ':id',
@@ -230,7 +249,7 @@ final List<RouteBase> _sellerSubRoutes = [
   ),
   GoRoute(
     path: 'messages',
-    builder: (_, __) => const ConversationsListScreen(),
+    pageBuilder: (_, __) => _noTransitionPage(const ConversationsListScreen()),
     routes: [
       GoRoute(
         path: ':id',
@@ -242,14 +261,14 @@ final List<RouteBase> _sellerSubRoutes = [
   ),
   GoRoute(
     path: 'profile',
-    builder: (_, __) => const SellerShell(),
+    pageBuilder: (_, __) => _noTransitionPage(const SellerShell()),
   ),
 ];
 
 final List<RouteBase> _driverSubRoutes = [
   GoRoute(
     path: ':tab',
-    builder: (_, __) => const SizedBox.shrink(),
+    pageBuilder: (_, __) => _noTransitionPage(const SizedBox.shrink()),
   ),
   GoRoute(
     path: 'orders/:id/tracking',
