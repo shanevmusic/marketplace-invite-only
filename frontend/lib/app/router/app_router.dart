@@ -25,6 +25,7 @@ import '../../features/stores/screens/edit_store_screen.dart';
 import '../../features/settings/screens/account_settings_screen.dart';
 import '../../features/settings/screens/change_password_screen.dart';
 import '../../features/settings/screens/edit_profile_screen.dart';
+import '../../features/admin/screens/admin_account_screen.dart';
 import '../../features/settings/screens/notification_prefs_screen.dart';
 import '../../features/tracking/customer/screens/customer_tracking_screen.dart';
 import '../../features/tracking/driver/screens/driver_tracking_screen.dart';
@@ -160,6 +161,14 @@ final List<RouteBase> _adminSubRoutes = [
     pageBuilder: (_, __) => _noTransitionPage(const AdminShell()),
   ),
   GoRoute(
+    path: 'drivers',
+    pageBuilder: (_, __) => _noTransitionPage(const AdminShell()),
+  ),
+  GoRoute(
+    path: 'orders',
+    pageBuilder: (_, __) => _noTransitionPage(const AdminShell()),
+  ),
+  GoRoute(
     path: 'content',
     pageBuilder: (_, __) => _noTransitionPage(const AdminShell()),
   ),
@@ -167,13 +176,21 @@ final List<RouteBase> _adminSubRoutes = [
     path: 'analytics',
     pageBuilder: (_, __) => _noTransitionPage(const AdminShell()),
   ),
+  // Account is a top-level full-screen page accessed from the AdminShell
+  // top-right button (no longer a bottom-nav tab).
+  GoRoute(
+    path: 'account',
+    pageBuilder: (_, __) => _noTransitionPage(const AdminAccountScreen()),
+  ),
+  // Legacy routes — kept for backward compatibility / deep-links.  Ops
+  // and Profile are now folded into the Account page.
   GoRoute(
     path: 'ops',
-    pageBuilder: (_, __) => _noTransitionPage(const AdminShell()),
+    pageBuilder: (_, __) => _noTransitionPage(const AdminAccountScreen()),
   ),
   GoRoute(
     path: 'profile',
-    pageBuilder: (_, __) => _noTransitionPage(const AdminShell()),
+    pageBuilder: (_, __) => _noTransitionPage(const AdminAccountScreen()),
   ),
 ];
 

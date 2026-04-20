@@ -45,10 +45,13 @@ abstract class AppRoutes {
 
   static const adminInvites = '/home/admin/invites';
   static const adminUsers = '/home/admin/users';
+  static const adminDrivers = '/home/admin/drivers';
+  static const adminOrders = '/home/admin/orders';
   static const adminContent = '/home/admin/content';
   static const adminAnalytics = '/home/admin/analytics';
   static const adminOps = '/home/admin/ops';
   static const adminProfile = '/home/admin/profile';
+  static const adminAccount = '/home/admin/account';
   static const adminSettings = '/home/admin/settings';
   static const adminLogs = '/home/admin/logs';
 

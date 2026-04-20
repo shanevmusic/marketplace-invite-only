@@ -85,6 +85,12 @@ void main() {
           limit: any(named: 'limit'),
         )).thenAnswer(
         (_) async => const AdminPagedProducts(data: [], nextCursor: null));
+    when(() => adminApi.listOrders(
+          status: any(named: 'status'),
+          cursor: any(named: 'cursor'),
+          limit: any(named: 'limit'),
+        )).thenAnswer(
+        (_) async => const AdminPagedOrders(data: [], nextCursor: null));
     when(() => adminApi.overview()).thenAnswer((_) async => _overview());
     when(() => adminApi.topSellers(limit: any(named: 'limit')))
         .thenAnswer((_) async => []);
@@ -145,11 +151,17 @@ void main() {
     expect(find.text('Issue invite'), findsOneWidget);
   });
 
+  // Bottom-nav tabs that must render the AdminShell on deep-link.
+  // Note: adminOps and adminProfile are intentionally excluded — those
+  // legacy routes now render AdminAccountScreen (Ops + Profile folded
+  // into Account), not AdminShell.  adminAccount also renders
+  // AdminAccountScreen.
   for (final path in [
     AppRoutes.adminUsers,
+    AppRoutes.adminDrivers,
+    AppRoutes.adminOrders,
     AppRoutes.adminContent,
     AppRoutes.adminAnalytics,
-    AppRoutes.adminOps,
   ]) {
     testWidgets('AdminShell renders at $path', (tester) async {
       await tester.pumpWidget(app());
