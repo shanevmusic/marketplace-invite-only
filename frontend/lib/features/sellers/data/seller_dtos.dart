@@ -49,3 +49,30 @@ class SellerDashboardResponse {
             : null,
       );
 }
+
+/// Subset of the backend InviteResponse needed for the seller referral UI.
+class SellerInvite {
+  const SellerInvite({
+    required this.id,
+    required this.token,
+    required this.usedCount,
+    this.maxUses,
+    this.createdAt,
+  });
+
+  final String id;
+  final String token;
+  final int usedCount;
+  final int? maxUses;
+  final DateTime? createdAt;
+
+  factory SellerInvite.fromJson(Map<String, dynamic> j) => SellerInvite(
+        id: j['id'] as String,
+        token: j['token'] as String,
+        usedCount: (j['used_count'] as int?) ?? 0,
+        maxUses: j['max_uses'] as int?,
+        createdAt: j['created_at'] != null
+            ? DateTime.tryParse(j['created_at'] as String)
+            : null,
+      );
+}
