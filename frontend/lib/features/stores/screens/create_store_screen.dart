@@ -24,6 +24,7 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen> {
   final _city = TextEditingController();
   final _desc = TextEditingController();
   bool _busy = false;
+  bool _isPublic = false;
 
   @override
   void dispose() {
@@ -45,6 +46,7 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen> {
               name: _name.text.trim(),
               city: _city.text.trim(),
               description: _desc.text.trim().isEmpty ? null : _desc.text.trim(),
+              isPublic: _isPublic,
             ),
           );
       final s = ref.read(myStoreControllerProvider);
@@ -81,6 +83,16 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen> {
               AppTextField(
                 label: 'Description (optional)',
                 controller: _desc,
+              ),
+              const SizedBox(height: AppSpacing.s4),
+              SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                value: _isPublic,
+                onChanged: _busy ? null : (v) => setState(() => _isPublic = v),
+                title: const Text('Public store'),
+                subtitle: const Text(
+                  'Anyone signed up to the app can find your store. Off by default — only customers you invite can see your store.',
+                ),
               ),
               const SizedBox(height: AppSpacing.s5),
               AppButton(

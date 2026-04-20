@@ -237,6 +237,13 @@ async def get_product_for_caller(
             raise ProductNotFound()
         return product
     if caller.role == "customer":
+        # Allow if product belongs to a public store, OR to the customer's referring seller.
+        store_pub = await db.execute(
+            sa.select(Store.is_public).where(Store.id == product.store_id)
+        )
+        is_public = bool(store_pub.scalar_one_or_none())
+        if is_public:
+            return product
         if (
             caller.referring_seller_id is None
             or caller.referring_seller_id != product.seller_id
@@ -282,11 +289,22 @@ async def list_products_for_caller(
         if store_id is not None:
             stmt = stmt.where(Product.store_id == store_id)
     elif caller.role == "customer":
+        # Visibility for customers: products from their referring seller's store
+        # OR from any public store.
+        stmt = stmt.join(Store, Store.id == Product.store_id).where(
+            Store.deleted_at.is_(None)
+        )
         if caller.referring_seller_id is None:
-            return []
-        stmt = stmt.where(Product.seller_id == caller.referring_seller_id)
-        if seller_id is not None and seller_id != caller.referring_seller_id:
-            return []
+            stmt = stmt.where(Store.is_public.is_(True))
+        else:
+            stmt = stmt.where(
+                sa.or_(
+                    Product.seller_id == caller.referring_seller_id,
+                    Store.is_public.is_(True),
+                )
+            )
+        if seller_id is not None:
+            stmt = stmt.where(Product.seller_id == seller_id)
         if store_id is not None:
             stmt = stmt.where(Product.store_id == store_id)
     else:

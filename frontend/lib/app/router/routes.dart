@@ -33,6 +33,7 @@ abstract class AppRoutes {
   static const sellerOrders = '/home/seller/orders';
   static const sellerStore = '/home/seller/profile';
   static const sellerStoreNew = '/home/seller/dashboard/store/new';
+  static const sellerStoreEdit = '/home/seller/dashboard/store/edit';
   static String sellerProductNew() => '$sellerProducts/new';
   static String sellerProductEdit(String id) => '$sellerProducts/$id/edit';
   static String sellerOrderDetail(String id) => '$sellerOrders/$id';

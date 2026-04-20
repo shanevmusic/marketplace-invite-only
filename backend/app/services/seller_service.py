@@ -28,6 +28,7 @@ from app.models.order import Order
 from app.models.order_analytics_snapshot import OrderAnalyticsSnapshot
 from app.models.platform_settings import PlatformSettings
 from app.models.seller import Seller
+from app.models.store import Store
 from app.models.user import User
 
 
@@ -85,6 +86,16 @@ async def get_seller_for_caller(
             raise SellerNotFound()
         return seller
     if caller.role == "customer":
+        # Allow if the seller has a public store.
+        public_store = await db.execute(
+            sa.select(Store.id).where(
+                Store.seller_id == seller.id,
+                Store.is_public.is_(True),
+                Store.deleted_at.is_(None),
+            )
+        )
+        if public_store.scalar_one_or_none() is not None:
+            return seller
         if (
             caller.referring_seller_id is None
             or caller.referring_seller_id != seller.id

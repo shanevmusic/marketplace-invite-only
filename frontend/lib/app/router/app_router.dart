@@ -21,6 +21,7 @@ import '../../features/products/screens/product_form_screen.dart';
 import '../../features/products/state/product_controller.dart';
 import '../../features/shell/role_shell.dart';
 import '../../features/stores/screens/create_store_screen.dart';
+import '../../features/stores/screens/edit_store_screen.dart';
 import '../../features/settings/screens/account_settings_screen.dart';
 import '../../features/settings/screens/change_password_screen.dart';
 import '../../features/settings/screens/edit_profile_screen.dart';
@@ -237,6 +238,10 @@ final List<RouteBase> _sellerSubRoutes = [
       GoRoute(
         path: 'store/new',
         builder: (_, __) => const CreateStoreScreen(),
+      ),
+      GoRoute(
+        path: 'store/edit',
+        builder: (_, __) => const EditStoreScreen(),
       ),
     ],
   ),

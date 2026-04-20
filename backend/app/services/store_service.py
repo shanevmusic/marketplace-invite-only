@@ -74,6 +74,7 @@ async def create_store(
     city: str,
     description: Optional[str] = None,
     slug: Optional[str] = None,
+    is_public: bool = False,
 ) -> Store:
     """Create the caller's one store.
 
@@ -112,6 +113,7 @@ async def create_store(
         name=name.strip(),
         slug=final_slug,
         description=(description or "").strip(),
+        is_public=bool(is_public),
     )
     db.add(store)
     try:
@@ -146,6 +148,7 @@ async def update_own_store(
     city: Optional[str] = None,
     description: Optional[str] = None,
     is_active: Optional[bool] = None,
+    is_public: Optional[bool] = None,
 ) -> Store:
     """Patch the caller's store (fields not provided are left unchanged)."""
     seller = await _get_caller_seller(db, caller)
@@ -171,6 +174,8 @@ async def update_own_store(
         store.description = description.strip()
     if is_active is not None:
         store.is_active = is_active
+    if is_public is not None:
+        store.is_public = is_public
 
     await db.flush()
     await db.refresh(store)
@@ -219,6 +224,10 @@ async def get_store_for_caller(
             raise StoreNotFound()
         return store, seller
     if caller.role == "customer":
+        # Public stores are visible to any logged-in customer.
+        if store.is_public:
+            return store, seller
+        # Otherwise, fall back to ADR-0007 referral-scoped visibility.
         if caller.referring_seller_id is None or caller.referring_seller_id != seller.id:
             raise VisibilityDenied()
         return store, seller
@@ -236,5 +245,6 @@ def store_to_response_dict(store: Store, seller: Seller) -> dict:
         "description": store.description,
         "city": seller.city,
         "is_active": store.is_active,
+        "is_public": store.is_public,
         "created_at": store.created_at,
     }

@@ -46,6 +46,7 @@ async def create_store(
         city=body.city,
         description=body.description,
         slug=body.slug,
+        is_public=body.is_public,
     )
     # Reload the seller so the response city matches what we persisted.
     seller = await store_service._get_caller_seller(db, caller)
@@ -77,6 +78,7 @@ async def patch_my_store(
         city=body.city,
         description=body.description,
         is_active=body.is_active,
+        is_public=body.is_public,
     )
     seller = await store_service._get_caller_seller(db, caller)
     return StoreResponse(**store_service.store_to_response_dict(store, seller))

@@ -82,6 +82,16 @@ class SellerDashboardScreen extends ConsumerWidget {
                       trailing: const Icon(Icons.share_outlined),
                       onTap: () => _openInviteSheet(context, ref),
                     ),
+                    const SizedBox(height: AppSpacing.s3),
+                    MetricCard(
+                      label: 'Store visibility',
+                      value: store.isPublic ? 'Public' : 'Invite-only',
+                      caption: store.isPublic
+                          ? 'Any signed-up customer can find your store'
+                          : 'Only invited customers can see your store',
+                      trailing: const Icon(Icons.tune_outlined),
+                      onTap: () => context.go(AppRoutes.sellerStoreEdit),
+                    ),
                   ],
                 ),
               ),
