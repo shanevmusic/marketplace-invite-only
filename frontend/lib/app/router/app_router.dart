@@ -344,8 +344,20 @@ final List<RouteBase> _sellerSubRoutes = [
 
 final List<RouteBase> _driverSubRoutes = [
   GoRoute(
-    path: ':tab',
-    pageBuilder: (_, __) => _noTransitionPage(const SizedBox.shrink()),
+    path: 'available',
+    pageBuilder: (_, __) => _noTransitionPage(const DriverShell()),
+  ),
+  GoRoute(
+    path: 'active',
+    pageBuilder: (_, __) => _noTransitionPage(const DriverShell()),
+  ),
+  GoRoute(
+    path: 'history',
+    pageBuilder: (_, __) => _noTransitionPage(const DriverShell()),
+  ),
+  GoRoute(
+    path: 'profile',
+    pageBuilder: (_, __) => _noTransitionPage(const DriverShell()),
   ),
   GoRoute(
     path: 'orders/:id/tracking',
