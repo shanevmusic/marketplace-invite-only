@@ -7,7 +7,7 @@ class StoreResponse {
     required this.description,
     required this.city,
     required this.isActive,
-    required this.isPublic,
+    this.isPublic = false,
   });
 
   final String id;
