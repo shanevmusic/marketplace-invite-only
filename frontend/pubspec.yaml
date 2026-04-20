@@ -23,6 +23,8 @@ dependencies:
   crypto: ^3.0.3
   web_socket_channel: ^2.4.5
   cryptography: ^2.7.0
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
   # Phase 13 — observability.  Uncomment and run `flutter pub get` once
   # the package is approved for the project.  See lib/main.dart for the
   # init-behind-dart-define pattern.

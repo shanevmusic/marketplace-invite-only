@@ -1,16 +1,19 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../app/router/routes.dart';
 import '../../../app/theme/theme_extensions.dart';
 import '../../../shared/widgets/app_app_bar.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../state/delivery_flow_providers.dart';
+
+const Color _kBurntAmber = Color(0xFFB8722D);
 
 /// Driver-side map + "complete delivery" flow.
 ///
@@ -25,11 +28,13 @@ class DriverDeliveryMapScreen extends ConsumerStatefulWidget {
 
 class _State extends ConsumerState<DriverDeliveryMapScreen> {
   Timer? _tick;
+  final MapController _mapController = MapController();
   double _driverLat = 40.7589;
   double _driverLng = -73.9851;
   double? _destLat;
   double? _destLng;
   bool _loadingRoute = true;
+  bool _didInitialFit = false;
 
   @override
   void initState() {
@@ -56,6 +61,8 @@ class _State extends ConsumerState<DriverDeliveryMapScreen> {
         _destLng = lng;
         _loadingRoute = false;
       });
+      // Fit bounds once we have both points.
+      WidgetsBinding.instance.addPostFrameCallback((_) => _fitBounds());
     } catch (_) {
       if (mounted) setState(() => _loadingRoute = false);
     }
@@ -66,8 +73,16 @@ class _State extends ConsumerState<DriverDeliveryMapScreen> {
     if (kIsWeb && _destLat != null && _destLng != null) {
       final dLat = (_destLat! - _driverLat) * 0.15;
       final dLng = (_destLng! - _driverLng) * 0.15;
-      _driverLat += dLat;
-      _driverLng += dLng;
+      if (mounted) {
+        setState(() {
+          _driverLat += dLat;
+          _driverLng += dLng;
+        });
+      } else {
+        _driverLat += dLat;
+        _driverLng += dLng;
+      }
+      _fitBounds();
     }
     try {
       await ref
@@ -75,6 +90,28 @@ class _State extends ConsumerState<DriverDeliveryMapScreen> {
           .driverLocation(widget.orderId, _driverLat, _driverLng);
     } catch (_) {
       // Swallow — map screen stays usable even if one POST fails.
+    }
+  }
+
+  void _fitBounds() {
+    if (_destLat == null || _destLng == null) return;
+    final driver = LatLng(_driverLat, _driverLng);
+    final dest = LatLng(_destLat!, _destLng!);
+    final bounds = LatLngBounds.fromPoints([driver, dest]);
+    try {
+      _mapController.fitCamera(
+        CameraFit.bounds(
+          bounds: bounds,
+          padding: const EdgeInsets.fromLTRB(48, 48, 48, 220),
+          maxZoom: 16,
+        ),
+      );
+      _didInitialFit = true;
+    } catch (_) {
+      // Controller not attached yet — retry on next frame.
+      if (!_didInitialFit) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _fitBounds());
+      }
     }
   }
 
@@ -93,6 +130,17 @@ class _State extends ConsumerState<DriverDeliveryMapScreen> {
   @override
   Widget build(BuildContext context) {
     final t = context.textStyles;
+    final driver = LatLng(_driverLat, _driverLng);
+    final dest = (_destLat != null && _destLng != null)
+        ? LatLng(_destLat!, _destLng!)
+        : null;
+    final initialCenter = dest == null
+        ? driver
+        : LatLng(
+            (driver.latitude + dest.latitude) / 2,
+            (driver.longitude + dest.longitude) / 2,
+          );
+
     return Scaffold(
       appBar: AppTopBar(
         title: 'Delivery',
@@ -106,15 +154,66 @@ class _State extends ConsumerState<DriverDeliveryMapScreen> {
       ),
       body: Stack(
         children: [
-          Container(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          Positioned.fill(
             child: _loadingRoute
                 ? const Center(child: CircularProgressIndicator())
-                : _DriverMap(
-                    driverLat: _driverLat,
-                    driverLng: _driverLng,
-                    destLat: _destLat,
-                    destLng: _destLng,
+                : FlutterMap(
+                    mapController: _mapController,
+                    options: MapOptions(
+                      initialCenter: initialCenter,
+                      initialZoom: 14,
+                      interactionOptions: const InteractionOptions(
+                        flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                      ),
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate:
+                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        userAgentPackageName: 'com.marketplace.app',
+                        maxNativeZoom: 19,
+                      ),
+                      if (dest != null)
+                        PolylineLayer(
+                          polylines: [
+                            Polyline(
+                              points: [driver, dest],
+                              color: _kBurntAmber,
+                              strokeWidth: 4,
+                            ),
+                          ],
+                        ),
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: driver,
+                            width: 40,
+                            height: 40,
+                            child: const _DriverMarker(),
+                          ),
+                          if (dest != null)
+                            Marker(
+                              point: dest,
+                              width: 40,
+                              height: 40,
+                              alignment: Alignment.topCenter,
+                              child: const Icon(
+                                Icons.location_on,
+                                color: Colors.redAccent,
+                                size: 40,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black54,
+                                    blurRadius: 4,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                      const _OsmAttribution(),
+                    ],
                   ),
           ),
           Align(
@@ -153,74 +252,59 @@ class _State extends ConsumerState<DriverDeliveryMapScreen> {
   }
 }
 
-/// Very lightweight schematic renderer — a real build would use `flutter_map`.
-class _DriverMap extends StatelessWidget {
-  const _DriverMap({
-    required this.driverLat,
-    required this.driverLng,
-    required this.destLat,
-    required this.destLng,
-  });
-  final double driverLat;
-  final double driverLng;
-  final double? destLat;
-  final double? destLng;
+class _DriverMarker extends StatelessWidget {
+  const _DriverMarker();
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (ctx, box) {
-        final center = Offset(box.maxWidth / 2, box.maxHeight / 2);
-        const r = 90.0;
-        const destAngle = math.pi / 4;
-        final destPoint =
-            destLat == null ? null : center + Offset(math.cos(destAngle) * r, math.sin(destAngle) * r);
-        return CustomPaint(
-          size: Size(box.maxWidth, box.maxHeight),
-          painter: _Painter(center: center, dest: destPoint),
-        );
-      },
+    return Container(
+      decoration: BoxDecoration(
+        color: _kBurntAmber,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black45,
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: const Icon(
+        Icons.local_shipping,
+        color: Colors.white,
+        size: 22,
+      ),
     );
   }
 }
 
-class _Painter extends CustomPainter {
-  _Painter({required this.center, required this.dest});
-  final Offset center;
-  final Offset? dest;
+class _OsmAttribution extends StatelessWidget {
+  const _OsmAttribution();
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final bg = Paint()..color = const Color(0xFF1A1A1A);
-    canvas.drawRect(Offset.zero & size, bg);
-
-    final road = Paint()
-      ..color = const Color(0xFF2A2A2A)
-      ..strokeWidth = 14;
-    for (int i = 0; i < 6; i++) {
-      final y = (size.height / 6) * i + 40;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), road);
-    }
-
-    if (dest != null) {
-      final line = Paint()
-        ..color = const Color(0xFFB8722D)
-        ..strokeWidth = 3;
-      canvas.drawLine(center, dest!, line);
-
-      final destMark = Paint()..color = const Color(0xFFB8722D);
-      canvas.drawCircle(dest!, 10, destMark);
-    }
-
-    final drv = Paint()..color = Colors.white;
-    canvas.drawCircle(center, 9, drv);
-    final drvInner = Paint()..color = const Color(0xFFB8722D);
-    canvas.drawCircle(center, 5, drvInner);
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.bottomRight,
+      child: Padding(
+        padding: const EdgeInsets.only(right: 4, bottom: 4),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.55),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: const Text(
+            '© OpenStreetMap contributors',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+            ),
+          ),
+        ),
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(covariant _Painter oldDelegate) =>
-      oldDelegate.dest != dest || oldDelegate.center != center;
 }
 
 class _CompleteDeliverySheet extends ConsumerStatefulWidget {
